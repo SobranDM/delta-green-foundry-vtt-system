@@ -1,11 +1,13 @@
 # Release/Patch Notes
 
-## Version 1.7.0 - 2026-xx-xx
+## Version 1.7.0 - 2026-06-20
 
 > Thanks to [hknmtt](https://github.com/hknmtt) for updating the Brazilian translation.
+> Thanks to [Sobran](https://github.com/SobranDM) for updating Delta Green for Foundry V14.
 
 ### **Features:**
 
+- Update the system for basic Foundry v14 compatibility.
 - [#296](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/296) - Remove adaptation checks if not adapted.
 - [#281](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/281) - Add tooltips to checkboxes in adaptation area.
 - [#211](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/211) - Move macros to System macros folder in compendium.
@@ -24,6 +26,7 @@
 
 - [#392](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/392) - Fixed sheet rolls
 - [#394](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/394) - Unified actor and item description fields on schema with shared ProseMirror preparation
+- [#396](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/396) - Fixed typed skill dialog when editing existing skill
 
 ### **Under the Hood:**
 

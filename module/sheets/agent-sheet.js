@@ -2,7 +2,9 @@ import DG, { BASE_TEMPLATE_PATH } from "../config/index.js";
 import { prepareAgentSkillColumns } from "../utils/skill-layout.js";
 import { formatProfessionSkillLabel } from "../profession/index.js";
 import { buildSkillTooltip } from "../utils/skill-tooltip.js";
-import createAgentResourceChatMessage from "../chat/resource-chat.js";
+import createAgentResourceChatMessage, {
+  buildWillpowerChangeSpan,
+} from "../chat/resource-chat.js";
 import {
   createSkillImprovementChatMessage,
   evaluateSkillImprovementRolls,
@@ -70,8 +72,8 @@ export default class DGAgentSheet extends AgentSheetBase {
       tabs: [
         { id: "skills" },
         { id: "combat" },
-        { id: "motivations" },
         { id: "gear" },
+        { id: "motivations" },
         { id: "personal" },
         { id: "effects" },
         { id: "about", icon: "fas fa-question-circle", label: "" },
@@ -102,8 +104,8 @@ export default class DGAgentSheet extends AgentSheetBase {
       templates: [
         `${this.TEMPLATE_PATH}/parts/skills-tab-agent.html`,
         `${this.TEMPLATE_PATH}/parts/combat-tab-agent.html`,
-        `${this.TEMPLATE_PATH}/parts/motivations-tab-agent.html`,
         `${this.TEMPLATE_PATH}/parts/gear-tab-agent.html`,
+        `${this.TEMPLATE_PATH}/parts/motivations-tab-agent.html`,
         `${this.TEMPLATE_PATH}/parts/personal-tab-agent.html`,
         `${this.TEMPLATE_PATH}/parts/effects-tab.html`,
         `${this.TEMPLATE_PATH}/parts/about-tab.html`,
@@ -428,13 +430,13 @@ export default class DGAgentSheet extends AgentSheetBase {
       actor,
       token: this.token,
       roll: wpRoll,
-      contentKey: "DG.Physical.Chat.Exhausted",
-      labelKey: "DG.Physical.Chat.ExhaustedLabel",
+      rollLabelKey: "DG.Physical.Chat.ExhaustedRollLabel",
       i18nData: {
-        name: actor.name,
-        loss,
-        current: newWp,
-        max: maxWp,
+        willpowerChange: buildWillpowerChangeSpan({
+          amount: loss,
+          current: newWp,
+          max: maxWp,
+        }),
       },
     });
   }
@@ -461,16 +463,15 @@ export default class DGAgentSheet extends AgentSheetBase {
       actor,
       token: this.token,
       roll: wpRoll,
-      contentKey: "DG.Physical.Chat.Rested",
-      labelKey: "DG.Physical.Chat.RestedLabel",
-      extraContentKey: wasExhausted
-        ? "DG.Physical.Chat.RestedNoLongerExhausted"
-        : null,
+      rollLabelKey: wasExhausted
+        ? "DG.Physical.Chat.RestedRollLabelExhausted"
+        : "DG.Physical.Chat.RestedRollLabel",
       i18nData: {
-        name: actor.name,
-        gain,
-        current: newWp,
-        max: maxWp,
+        willpowerChange: buildWillpowerChangeSpan({
+          amount: gain,
+          current: newWp,
+          max: maxWp,
+        }),
       },
     });
   }
@@ -526,26 +527,19 @@ export default class DGAgentSheet extends AgentSheetBase {
     const formula = choice === "hard" ? "2d6" : "1d6";
     const hoursRoll = await new Roll(formula).evaluate();
     const hours = hoursRoll.total;
-    const contentKey =
+    const rollLabelKey =
       choice === "hard"
-        ? "DG.Physical.Chat.StimulantsHard"
-        : "DG.Physical.Chat.StimulantsRegular";
+        ? "DG.Physical.Chat.StimulantsHardRollLabel"
+        : "DG.Physical.Chat.StimulantsRegularRollLabel";
 
     const appliedHours = await applyStimulantEffect(actor, hours);
-
-    const labelKey =
-      choice === "hard"
-        ? "DG.Physical.Chat.StimulantsHardLabel"
-        : "DG.Physical.Chat.StimulantsRegularLabel";
 
     await createAgentResourceChatMessage({
       actor,
       token: this.token,
       roll: hoursRoll,
-      contentKey,
-      labelKey,
+      rollLabelKey,
       i18nData: {
-        name: actor.name,
         hours: appliedHours,
       },
     });
@@ -718,12 +712,9 @@ export default class DGAgentSheet extends AgentSheetBase {
       return super._onItemCreate(type);
     }
 
-    const name = game.i18n.format(
-      game.i18n.translations.DOCUMENT?.New || "DG.FallbackText.newItem",
-      {
-        type: game.i18n.localize("TYPES.Item.profession"),
-      },
-    );
+    const name = game.i18n.format("DG.FallbackText.newItem", {
+      type: game.i18n.localize(`TYPES.Item.${type}`),
+    });
 
     const itemData = {
       name,
