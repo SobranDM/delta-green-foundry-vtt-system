@@ -223,6 +223,14 @@ export class DGPercentileRoll extends DGRoll {
    * @returns {{ target: number|null, localizedKey: string|null, skillPath: string|null }}
    */
   getRollInfoFromKey() {
+    if (!this.actor?.system) {
+      return {
+        target: this.target ?? null,
+        localizedKey: this.localizedKey ?? null,
+        skillPath: this.skillPath ?? null,
+      };
+    }
+
     const actorData = this.actor.system;
     const skillKeys = Object.keys(actorData.skills);
     const typedSkillKeys = Object.keys(actorData.typedSkills);
@@ -258,6 +266,33 @@ export class DGPercentileRoll extends DGRoll {
       localizedKey = game.i18n.localize(`DG.Skills.ritual`);
     }
     return { target, localizedKey, skillPath };
+  }
+
+  /** @override */
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      target: this.target,
+      localizedKey: this.localizedKey,
+      skillPath: this.skillPath,
+      specialTrainingName: this.specialTrainingName,
+    };
+  }
+
+  /**
+   * @override
+   * @param {object} data
+   * @returns {DGPercentileRoll}
+   */
+  static _fromData(data) {
+    const roll = super._fromData(data);
+    if (data.target !== undefined) roll.target = data.target;
+    if (data.localizedKey !== undefined) roll.localizedKey = data.localizedKey;
+    if (data.skillPath !== undefined) roll.skillPath = data.skillPath;
+    if (data.specialTrainingName !== undefined) {
+      roll.specialTrainingName = data.specialTrainingName;
+    }
+    return roll;
   }
 
   /**

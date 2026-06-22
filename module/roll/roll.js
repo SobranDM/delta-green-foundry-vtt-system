@@ -13,6 +13,22 @@ export {
   DGSanityDamageRoll,
 };
 
+const DG_ROLL_CLASSES = [
+  DGRoll,
+  DGPercentileRoll,
+  DGLethalityRoll,
+  DGDamageRoll,
+  DGSanityDamageRoll,
+];
+
+if (globalThis.CONFIG?.Dice?.rolls) {
+  for (const cls of DG_ROLL_CLASSES) {
+    if (!CONFIG.Dice.rolls.includes(cls)) {
+      CONFIG.Dice.rolls.push(cls);
+    }
+  }
+}
+
 /**
  * Build a Delta Green roll from a click target's dataset.
  *

@@ -12,9 +12,9 @@ import {
   getDialogContentRoot,
   showDgDialog,
 } from "../../applications/dg-dialog.js";
+import { markForDeletion } from "../../utils/forced-deletion.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
-const { ForcedDeletion } = foundry.data.operators;
 
 /** @param {typeof foundry.applications.api.ApplicationV2} Base */
 export default function ProfessionItemMixin(Base) {
@@ -257,14 +257,15 @@ export default function ProfessionItemMixin(Base) {
       const metaField =
         field === "automaticSkills" ? "automaticSkillMeta" : "optionSkillMeta";
 
+      const fieldUpdate = {};
+      const metaUpdate = {};
+      markForDeletion(fieldUpdate, skillKey);
+      markForDeletion(metaUpdate, skillKey);
+
       await this.item.update({
         system: {
-          [field]: {
-            [skillKey]: new ForcedDeletion(),
-          },
-          [metaField]: {
-            [skillKey]: new ForcedDeletion(),
-          },
+          [field]: fieldUpdate,
+          [metaField]: metaUpdate,
         },
       });
       return this.render();

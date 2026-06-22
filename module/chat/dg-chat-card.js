@@ -2,6 +2,12 @@
 
 import DG from "../config/index.js";
 import { getCharacterSheetThemeClass } from "../applications/dg-dialog.js";
+import {
+  applyRollMessageModeToMessage,
+  buildChatMessageModeOptions,
+  isBlindRollMessageMode,
+  normalizeRollMessageMode,
+} from "../utils/message-mode.js";
 
 const CHAT_CARD_TEMPLATE = "systems/deltagreen/templates/chat/dg-chat-card.hbs";
 const { renderTemplate } = foundry.applications.handlebars;
@@ -367,14 +373,13 @@ export async function prepareDGRollChatMessageData({
   messageMode,
   flags = {},
 }) {
-  const mode = messageMode ?? game.settings.get("core", "messageMode");
-  const mappedMode = foundry.dice.Roll._mapLegacyRollMode(mode);
+  const mappedMode = normalizeRollMessageMode(messageMode);
   const resolvedActor = actor ?? roll.actor ?? null;
   const resolvedToken = token ?? roll.options?.token ?? null;
   const useCard = shouldUseChatCard({ title, subtitle, label, rollLabel });
 
   if (!roll._evaluated) {
-    await roll.evaluate({ allowInteractive: mappedMode !== "blind" });
+    await roll.evaluate({ allowInteractive: !isBlindRollMessageMode(mappedMode) });
   }
 
   const speaker = getDGSpeaker({
@@ -438,7 +443,7 @@ export async function createDGRollChatMessage(params) {
 
   const ChatMessageDocument = foundry.utils.getDocumentClass("ChatMessage");
   const msg = new ChatMessageDocument(messageData);
-  msg.applyMode(mappedMode);
+  applyRollMessageModeToMessage(msg, mappedMode);
   return ChatMessageDocument.create(msg);
 }
 
@@ -472,7 +477,7 @@ export async function createDGChatMessage({
     return ChatMessage.create({
       speaker: getDGSpeaker({ actor, token, scene }),
       content,
-      messageMode: messageMode ?? game.settings.get("core", "messageMode"),
+      ...buildChatMessageModeOptions(messageMode),
       flags,
     });
   }
@@ -490,7 +495,7 @@ export async function createDGChatMessage({
   return ChatMessage.create({
     speaker,
     content: wrappedContent,
-    messageMode: messageMode ?? game.settings.get("core", "messageMode"),
+    ...buildChatMessageModeOptions(messageMode),
     flags: foundry.utils.mergeObject({ [DG.ID]: { chatCard: true } }, flags),
   });
 }

@@ -3,6 +3,7 @@ import {
   buildEffectFieldSelectOptions,
   getEffectFieldGroupsForDocument,
 } from "../active-effect/effect-fields.js";
+import { getActiveEffectChangeFieldPath } from "../active-effect/active-effect-changes.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
 const { ActiveEffectConfig } = foundry.applications.sheets;
@@ -56,7 +57,10 @@ export default class DGActiveEffectConfig extends ActiveEffectConfig {
       change,
       ["key", "type", "value", "phase", "priority"].reduce(
         (paths, fieldName) => {
-          paths[`${fieldName}Path`] = `system.changes.${index}.${fieldName}`;
+          paths[`${fieldName}Path`] = getActiveEffectChangeFieldPath(
+            index,
+            fieldName,
+          );
           return paths;
         },
         {},

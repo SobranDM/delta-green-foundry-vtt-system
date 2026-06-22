@@ -1,6 +1,10 @@
 import DG from "../../config/index.js";
 import { ROLL_TARGET_FIELD_KEYS } from "../effect-fields.js";
 import getEffectiveSuppressExhaustion from "./agent-condition-sync.js";
+import {
+  buildActiveEffectChangesUpdate,
+  getActiveEffectChanges,
+} from "../active-effect-changes.js";
 
 /** @type {WeakMap<Actor, Promise<void>>} */
 const syncLocks = new WeakMap();
@@ -45,7 +49,7 @@ function buildExhaustionChanges(penalty) {
  */
 function effectMatchesState(effect, penalty, suppressExhaustion) {
   if (Boolean(effect.disabled) !== Boolean(suppressExhaustion)) return false;
-  const changes = effect.system?.changes ?? [];
+  const changes = getActiveEffectChanges(effect);
   if (changes.length !== ROLL_TARGET_FIELD_KEYS.length) return false;
   return changes.every(
     (change) =>
@@ -91,7 +95,10 @@ async function syncExhaustionEffectInner(actor) {
 
   if (effect) {
     if (effectMatchesState(effect, penalty, suppressExhaustion)) return;
-    await effect.update({ changes, disabled });
+    await effect.update({
+      ...buildActiveEffectChangesUpdate(changes),
+      disabled,
+    });
     return;
   }
 
@@ -102,7 +109,7 @@ async function syncExhaustionEffectInner(actor) {
       img: "systems/deltagreen/assets/icons/magic-shield.svg",
       transfer: false,
       disabled,
-      changes,
+      ...buildActiveEffectChangesUpdate(changes),
       flags: { [DG.ID]: { exhaustion: true } },
     },
     { parent: actor },

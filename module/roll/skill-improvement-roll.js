@@ -1,6 +1,7 @@
 import { createDGChatMessage } from "../chat/dg-chat-card.js";
 import DG from "../config/index.js";
 import { formatProfessionSkillLabel } from "../profession/index.js";
+import { getDefaultRollMessageMode } from "../utils/message-mode.js";
 
 /**
  * @param {"1"|"d3"|"d4"|"d4-1"} baseFormula
@@ -104,6 +105,6 @@ export async function createSkillImprovementChatMessage({
     token,
     title,
     content,
-    messageMode: game.settings.get("core", "messageMode"),
+    messageMode: getDefaultRollMessageMode(),
   });
 }
