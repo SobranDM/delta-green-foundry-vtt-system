@@ -4,7 +4,7 @@ import {
   TYPED_GROUP_I18N,
   TYPED_SKILL_TEMPLATE_GROUPS,
 } from "../../profession/constants.js";
-import { markForDeletion } from "../../utils/forced-deletion.js";
+import markForDeletion from "../../utils/forced-deletion.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
 

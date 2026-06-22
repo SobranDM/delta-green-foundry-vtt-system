@@ -19,46 +19,42 @@ function validateChangeType(type) {
   return true;
 }
 
+const Base = foundry.data.ActiveEffectTypeDataModel;
+
 /** @type {typeof foundry.data.ActiveEffectTypeDataModel|null} */
-let DGActiveEffectTypeDataModel = null;
-
-if (foundry.data.ActiveEffectTypeDataModel) {
-  const Base = foundry.data.ActiveEffectTypeDataModel;
-
-  /**
-   * Delta Green Active Effect system data — matches core change schema with `final` as the default phase.
-   * @extends {foundry.data.ActiveEffectTypeDataModel}
-   */
-  DGActiveEffectTypeDataModel = class extends Base {
-    /** @override */
-    static defineSchema() {
-      return {
-        changes: new ArrayField(
-          new SchemaField({
-            key: new StringField({ required: true }),
-            type: new StringField({
-              required: true,
-              blank: false,
-              initial: "add",
-              validate: validateChangeType,
+export default Base
+  ? /**
+     * Delta Green Active Effect system data — matches core change schema with `final` as the default phase.
+     * @extends {foundry.data.ActiveEffectTypeDataModel}
+     */
+    class extends Base {
+      /** @override */
+      static defineSchema() {
+        return {
+          changes: new ArrayField(
+            new SchemaField({
+              key: new StringField({ required: true }),
+              type: new StringField({
+                required: true,
+                blank: false,
+                initial: "add",
+                validate: validateChangeType,
+              }),
+              value: new AnyField({
+                required: true,
+                nullable: true,
+                serializable: true,
+                initial: "",
+              }),
+              phase: new StringField({
+                required: true,
+                blank: false,
+                initial: "final",
+              }),
+              priority: new NumberField(),
             }),
-            value: new AnyField({
-              required: true,
-              nullable: true,
-              serializable: true,
-              initial: "",
-            }),
-            phase: new StringField({
-              required: true,
-              blank: false,
-              initial: "final",
-            }),
-            priority: new NumberField(),
-          }),
-        ),
-      };
+          ),
+        };
+      }
     }
-  };
-}
-
-export default DGActiveEffectTypeDataModel;
+  : null;

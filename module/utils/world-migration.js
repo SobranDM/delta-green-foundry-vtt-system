@@ -1,5 +1,5 @@
 import DG from "../config/index.js";
-import { markForDeletion } from "./forced-deletion.js";
+import markForDeletion from "./forced-deletion.js";
 
 const MIGRATION_VERSION = 2;
 const ACTOR_TYPES_WITH_SKILLS = ["agent", "npc", "unnatural"];

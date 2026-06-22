@@ -12,7 +12,7 @@ import {
   getDialogContentRoot,
   showDgDialog,
 } from "../../applications/dg-dialog.js";
-import { markForDeletion } from "../../utils/forced-deletion.js";
+import markForDeletion from "../../utils/forced-deletion.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
 

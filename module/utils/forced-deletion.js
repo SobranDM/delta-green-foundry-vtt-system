@@ -5,7 +5,7 @@
  * @param {Record<string, unknown>} parentUpdate
  * @param {string} key
  */
-export function markForDeletion(parentUpdate, key) {
+export default function markForDeletion(parentUpdate, key) {
   if (foundry.data.operators?.ForcedDeletion) {
     parentUpdate[key] = new foundry.data.operators.ForcedDeletion();
   } else {

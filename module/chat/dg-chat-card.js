@@ -379,7 +379,9 @@ export async function prepareDGRollChatMessageData({
   const useCard = shouldUseChatCard({ title, subtitle, label, rollLabel });
 
   if (!roll._evaluated) {
-    await roll.evaluate({ allowInteractive: !isBlindRollMessageMode(mappedMode) });
+    await roll.evaluate({
+      allowInteractive: !isBlindRollMessageMode(mappedMode),
+    });
   }
 
   const speaker = getDGSpeaker({
