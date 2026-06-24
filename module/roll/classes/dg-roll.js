@@ -69,8 +69,8 @@ export class DGRoll extends Roll {
    * @param {object} data
    * @returns {DGRoll}
    */
-  static _fromData(data) {
-    const roll = super._fromData(data);
+  static fromData(data) {
+    const roll = super.fromData(data);
     roll.type = data.type ?? roll.type ?? roll.options?.rollType;
     roll.key = data.key ?? roll.key ?? roll.options?.key;
     roll.modifier = data.modifier ?? roll.modifier ?? 0;

@@ -284,8 +284,8 @@ export class DGPercentileRoll extends DGRoll {
    * @param {object} data
    * @returns {DGPercentileRoll}
    */
-  static _fromData(data) {
-    const roll = super._fromData(data);
+  static fromData(data) {
+    const roll = super.fromData(data);
     if (data.target !== undefined) roll.target = data.target;
     if (data.localizedKey !== undefined) roll.localizedKey = data.localizedKey;
     if (data.skillPath !== undefined) roll.skillPath = data.skillPath;
