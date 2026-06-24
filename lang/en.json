@@ -544,5 +544,19 @@
   "DG.Profession.Dialog.BondRelationshipRequired": "Enter a relationship for each bond.",
   "DG.Profession.Dialog.BonusSkillRequired": "Select all {count} bonus skills.",
   "DG.Profession.Dialog.BonusSkillTypeRequired": "Enter a specialization for each typed bonus skill.",
-  "DG.Profession.Dialog.TypedNameRequired": "Enter a name for each {type} skill."
+  "DG.Profession.Dialog.TypedNameRequired": "Enter a name for each {type} skill.",
+
+  "DG.SanityRoll.DialogTitle": "Sanity Roll",
+  "DG.SanityRoll.DialogPrompt": "Choose the source of this sanity roll:",
+  "DG.SanityRoll.Violence": "Violence",
+  "DG.SanityRoll.Helplessness": "Helplessness",
+  "DG.SanityRoll.Unnatural": "Unnatural",
+  "DG.SanityRoll.None": "None",
+  "DG.SanityRoll.BPShort": "BP",
+  "DG.SanityRoll.SelectedChoice": "Selected: {choice}",
+  "DG.Settings.automateAdaptationTicks.name": "Automate adaptation ticks",
+  "DG.Settings.automateAdaptationTicks.hint": "When enabled, adaptation incidents on the character sheet will automatically tick and clear. When disabled, you have to manage adaptation incidents manually.",
+  "DG.Messages.AdaptedToSanity": "{adaptationType}.",
+  "DG.Messages.BecameTemporaryInsane": "{name} became temporarily insane.",
+  "DG.Messages.HitBreakingPoint": "{name} hit their breaking point."
 }

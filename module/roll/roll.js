@@ -1,9 +1,11 @@
+import DG from "../config/index.js";
 import { DGRoll } from "./classes/dg-roll.js";
 import { DGPercentileRoll } from "./classes/dg-percentile-roll.js";
 import { DGLethalityRoll } from "./classes/dg-lethality-roll.js";
 import { DGDamageRoll } from "./classes/dg-damage-roll.js";
 import { DGSanityDamageRoll } from "./classes/dg-sanity-damage-roll.js";
 import appendMeleeDamageBonus from "./melee-damage.js";
+import { showSanityChoiceDialog } from "./roll-dialogs.js";
 
 export {
   DGRoll,
@@ -105,6 +107,17 @@ export async function processDGRoll(event, roll) {
     return;
   }
 
+  const automateSanity =
+    roll instanceof DGPercentileRoll &&
+    roll.type === "sanity" &&
+    game.settings.get(DG.ID, "automateAdaptationTicks");
+
+  if (automateSanity && !roll.sanityChoice?.value) {
+    const sanityChoice = await showSanityChoiceDialog();
+    if (!sanityChoice) return;
+    roll.sanityChoice = sanityChoice;
+  }
+
   if (shiftKey || which === 3) {
     if (!(roll instanceof DGSanityDamageRoll)) {
       const dialogData = await roll.showDialog();
@@ -119,5 +132,30 @@ export async function processDGRoll(event, roll) {
     }
   }
   await roll.evaluate();
+
+  if (
+    automateSanity &&
+    roll.sanityChoice?.value &&
+    roll.actor?.system?.sanity?.adaptations
+  ) {
+    const { value } = roll.sanityChoice;
+    const { adaptations } = roll.actor.system.sanity;
+    const isViolence = value === "Violence";
+    const isHelplessness = value === "Helplessness";
+
+    if (
+      (isViolence && adaptations.violence?.isAdapted) ||
+      (isHelplessness && adaptations.helplessness?.isAdapted)
+    ) {
+      roll.treatAsSuccess = true;
+    }
+
+    let sourceKey = "none";
+    if (isViolence) sourceKey = "violence";
+    else if (isHelplessness) sourceKey = "helplessness";
+    else if (value === "Unnatural") sourceKey = "unnatural";
+    await roll.actor.setFlag(DG.ID, "lastSanityRollSource", sourceKey);
+  }
+
   await roll.toChat();
 }
