@@ -16,6 +16,27 @@ import { DGRoll } from "./dg-roll.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
 
+const ADAPTED_SANITY_CHOICE_LABEL_KEYS = {
+  Violence: "DG.Mental.AdaptedToViolence",
+  Helplessness: "DG.Mental.AdaptedToHelplessness",
+};
+
+/**
+ * Chat label for a sanity roll source (adapted override, hide "None", else choice label).
+ *
+ * @param {DGPercentileRoll} roll
+ * @returns {string|null}
+ */
+function getSanityChoiceLabel(roll) {
+  const sanityChoiceValue = roll.sanityChoice?.value;
+  if (roll.treatAsSuccess && sanityChoiceValue) {
+    const key = ADAPTED_SANITY_CHOICE_LABEL_KEYS[sanityChoiceValue];
+    if (key) return game.i18n.localize(key);
+  }
+  if (sanityChoiceValue === "None") return null;
+  return roll.sanityChoice?.label ?? null;
+}
+
 export class DGPercentileRoll extends DGRoll {
   /**
    * Creates D100 rolls, the base die of the system.
@@ -65,6 +86,7 @@ export class DGPercentileRoll extends DGRoll {
       case "sanity":
         this.target = this.actor.system.sanity.value;
         this.localizedKey = game.i18n.localize("DG.Attributes.SAN");
+        this.sanityChoice = options.sanityChoice ?? null;
         break;
       case "luck":
         this.target = 50;
@@ -172,6 +194,8 @@ export class DGPercentileRoll extends DGRoll {
       !foundry.utils.getProperty(this.actor, `${this.skillPath}.failure`) &&
       game.settings.get(DG.ID, "skillFailure");
 
+    const sanityChoiceLabel = getSanityChoiceLabel(this);
+
     const html = await renderTemplate(
       "systems/deltagreen/templates/roll/percentile-roll.hbs",
       {
@@ -180,6 +204,7 @@ export class DGPercentileRoll extends DGRoll {
         formula: this.formula,
         total: this.total,
         failureMark,
+        sanityChoiceLabel,
       },
     );
 
@@ -326,6 +351,26 @@ export class DGPercentileRoll extends DGRoll {
    * @returns {{ rollLabel: string }}
    */
   createChatHeader() {
+    if (this.type === "sanity") {
+      let rollLabel = `${this.localizedKey}: <b>${this.effectiveTarget}</b>`;
+      if (game.settings.get(DG.ID, "automateAdaptationTicks")) {
+        const { value, currentBreakingPoint } =
+          this.actor?.system?.sanity ?? {};
+        let sanPointsTillBP =
+          (typeof value === "number" ? value : 0) -
+          (typeof currentBreakingPoint === "number" ? currentBreakingPoint : 0);
+        if (sanPointsTillBP <= 0) sanPointsTillBP = 0;
+        const bpShort = game.i18n.localize("DG.SanityRoll.BPShort");
+        rollLabel += `<span class="card-bp">${bpShort}: <b>${sanPointsTillBP}</b></span>`;
+      }
+      if (this.isInhuman) {
+        rollLabel = `<b>${this.localizedKey} [${game.i18n
+          .localize("DG.Roll.Inhuman")
+          .toUpperCase()}]</b> ${rollLabel}`;
+      }
+      return { rollLabel };
+    }
+
     let displayKey = this.localizedKey;
     if (
       this.type === "weapon" &&
@@ -438,6 +483,9 @@ export class DGPercentileRoll extends DGRoll {
     if (!this.total) {
       return null;
     }
+
+    // Adapted to sanity source (violence/helplessness): treat as success but keep roll normal.
+    if (this.treatAsSuccess) return true;
 
     // A roll of 100 always (critically) fails, even for inhuman rolls.
     if (this.total === 100) return false;
