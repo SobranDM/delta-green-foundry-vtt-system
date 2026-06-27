@@ -20,6 +20,6 @@ node_modules
 css/*.css
 css/*.css.map
 
-# Local editor config (shared .vscode/settings.json and extensions.json stay tracked)
+# Local editor config
 .cursor/rules/
 .vscode/tasks.json
