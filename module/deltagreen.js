@@ -1,9 +1,6 @@
 // Import Modules
 import DG from "./config/index.js";
 import DeltaGreenActor from "./actor/actor.js";
-import DGAgentSheet from "./sheets/agent-sheet.js";
-import DeltaGreenItem from "./item/item.js";
-import DGItemSheet from "./sheets/base-item-sheet.js";
 import {
   DGRoll,
   DGPercentileRoll,
@@ -11,6 +8,9 @@ import {
   DGDamageRoll,
   DGSanityDamageRoll,
 } from "./roll/roll.js";
+import DGAgentSheet from "./sheets/agent-sheet.js";
+import DeltaGreenItem from "./item/item.js";
+import DGItemSheet from "./sheets/base-item-sheet.js";
 import registerSystemSettings from "./settings.js";
 import preloadHandlebarsTemplates from "./templates.js";
 import registerHandlebarsHelpers from "./utils/register-helpers.js";
@@ -73,7 +73,9 @@ Hooks.once("init", async () => {
   });
 
   CONFIG.ActiveEffect.documentClass = DGActiveEffect;
-  CONFIG.ActiveEffect.dataModels.base = DGActiveEffectTypeDataModel;
+  if (DGActiveEffectTypeDataModel) {
+    CONFIG.ActiveEffect.dataModels.base = DGActiveEffectTypeDataModel;
+  }
 
   DocumentSheetConfig.registerSheet(
     DGActiveEffect,

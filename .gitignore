@@ -19,3 +19,7 @@ node_modules
 # Sass build output (source lives in scss/)
 css/*.css
 css/*.css.map
+
+# Local editor config
+.cursor/rules/
+.vscode/tasks.json

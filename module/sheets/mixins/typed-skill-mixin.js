@@ -4,9 +4,9 @@ import {
   TYPED_GROUP_I18N,
   TYPED_SKILL_TEMPLATE_GROUPS,
 } from "../../profession/constants.js";
+import markForDeletion from "../../utils/forced-deletion.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
-const { ForcedDeletion } = foundry.data.operators;
 
 /**
  * @param {string} [selectedGroup]
@@ -39,15 +39,16 @@ export default function TypedSkillMixin(Base) {
             console.error(error);
           });
           break;
-        case "delete":
+        case "delete": {
+          const typedSkillsUpdate = {};
+          markForDeletion(typedSkillsUpdate, typedskill);
           this.actor.update({
             system: {
-              typedSkills: {
-                [typedskill]: new ForcedDeletion(),
-              },
+              typedSkills: typedSkillsUpdate,
             },
           });
           break;
+        }
         default:
           break;
       }

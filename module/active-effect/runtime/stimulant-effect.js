@@ -1,5 +1,6 @@
 import DG from "../../config/index.js";
 import { syncExhaustionEffect } from "./exhaustion-effect.js";
+import { buildActiveEffectChangesUpdate } from "../active-effect-changes.js";
 
 /**
  * @param {Actor} actor
@@ -93,7 +94,7 @@ export async function applyStimulantEffect(actor, newHours) {
     await existing.update({
       start: data.start,
       duration: data.duration,
-      changes: data.changes,
+      ...buildActiveEffectChangesUpdate(data.changes),
       disabled: false,
     });
     return hours;

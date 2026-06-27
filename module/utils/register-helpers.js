@@ -1,5 +1,9 @@
 import { getDisorderLabel } from "../profession/disorders.js";
 import DGUtils from "./utility-functions.js";
+import {
+  getAvailableRollMessageModes,
+  getDefaultRollMessageMode,
+} from "./message-mode.js";
 
 export default function registerHandlebarsHelpers() {
   // Add Handlebars helpers
@@ -39,16 +43,10 @@ export default function registerHandlebarsHelpers() {
     return falseVal;
   });
 
-  /** Roll visibility modes for dialog selects (v14+ CONFIG.ChatMessage.modes keys). */
-  const ROLL_MESSAGE_MODE_KEYS = ["public", "gm", "blind", "self"];
-
+  /** Roll visibility modes for dialog selects. */
   Handlebars.registerHelper("getAvailableRollModes", () => {
     try {
-      return Object.fromEntries(
-        ROLL_MESSAGE_MODE_KEYS.filter(
-          (key) => key in CONFIG.ChatMessage.modes,
-        ).map((key) => [key, CONFIG.ChatMessage.modes[key]]),
-      );
+      return getAvailableRollMessageModes();
     } catch (error) {
       return console.log(error);
     }
@@ -56,7 +54,7 @@ export default function registerHandlebarsHelpers() {
 
   Handlebars.registerHelper("getDefaultRollMode", () => {
     try {
-      return game.settings.get("core", "messageMode");
+      return getDefaultRollMessageMode();
     } catch (error) {
       return console.log(error);
     }
