@@ -19,5 +19,7 @@ node_modules
 # Sass build output (source lives in scss/)
 css/*.css
 css/*.css.map
-.cursor/rules/ponytail-lazy-senior-dev.mdc
+
+# Local editor config (shared .vscode/settings.json and extensions.json stay tracked)
+.cursor/rules/
 .vscode/tasks.json
