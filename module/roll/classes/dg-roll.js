@@ -4,8 +4,33 @@ import {
   createDGRollChatMessage,
   prepareDGRollChatMessageData,
 } from "../../chat/dg-chat-card.js";
+import { applyRollMessageModeToMessage } from "../../utils/message-mode.js";
 
 export class DGRoll extends Roll {
+  /**
+   * @param {unknown} actor
+   * @returns {DeltaGreenActor|null}
+   */
+  static _resolveActorReference(actor) {
+    if (!actor) return null;
+    if (actor.system) return actor;
+    if (typeof actor === "string") return game.actors?.get(actor) ?? null;
+    if (actor.id) return game.actors?.get(actor.id) ?? null;
+    return null;
+  }
+
+  /**
+   * @param {unknown} item
+   * @returns {DeltaGreenItem|null}
+   */
+  static _resolveItemReference(item) {
+    if (!item) return null;
+    if (item.system) return item;
+    if (typeof item === "string") return game.items?.get(item) ?? null;
+    if (item.id) return game.items?.get(item.id) ?? null;
+    return null;
+  }
+
   /**
    * NOTE: This class will rarely be called on its own. It should generally be extended. Look to DGPercentileRoll as an example.
    *
@@ -24,9 +49,36 @@ export class DGRoll extends Roll {
     const { rollType, key, actor, item } = options;
     this.type = rollType;
     this.key = key;
-    this.actor = actor;
-    this.item = item;
+    this.actor = DGRoll._resolveActorReference(actor);
+    this.item = DGRoll._resolveItemReference(item);
     this.modifier = 0;
+  }
+
+  /** @override */
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      type: this.type,
+      key: this.key,
+      modifier: this.modifier,
+    };
+  }
+
+  /**
+   * @override
+   * @param {object} data
+   * @returns {DGRoll}
+   */
+  static fromData(data) {
+    const roll = super.fromData(data);
+    roll.type = data.type ?? roll.type ?? roll.options?.rollType;
+    roll.key = data.key ?? roll.key ?? roll.options?.key;
+    roll.modifier = data.modifier ?? roll.modifier ?? 0;
+    roll.actor =
+      DGRoll._resolveActorReference(roll.options?.actor) ?? roll.actor ?? null;
+    roll.item =
+      DGRoll._resolveItemReference(roll.options?.item) ?? roll.item ?? null;
+    return roll;
   }
 
   /**
@@ -77,7 +129,7 @@ export class DGRoll extends Roll {
     const cls = foundry.utils.getDocumentClass("ChatMessage");
     // eslint-disable-next-line new-cap -- Foundry document class resolved at runtime
     const msg = new cls(prepared);
-    msg.applyMode(mappedMode);
+    applyRollMessageModeToMessage(msg, mappedMode);
     return msg.toObject();
   }
 }

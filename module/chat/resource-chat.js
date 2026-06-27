@@ -1,4 +1,5 @@
 import { createDGRollChatMessage } from "./dg-chat-card.js";
+import { getDefaultRollMessageMode } from "../utils/message-mode.js";
 
 /**
  * Underlined "{amount} Willpower" span with a current/max tooltip for chat roll labels.
@@ -59,7 +60,7 @@ export default async function createAgentResourceChatMessage({
     ? game.i18n.localize(labelKey)
     : "";
 
-  const messageMode = game.settings.get("core", "messageMode");
+  const messageMode = getDefaultRollMessageMode();
 
   return createDGRollChatMessage({
     actor,
