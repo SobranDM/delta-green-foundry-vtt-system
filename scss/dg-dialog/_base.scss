@@ -76,6 +76,16 @@
     }
   }
 
+  &--sanity-roll .form-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    > button {
+      flex: unset;
+      min-width: 0;
+    }
+  }
+
   &--stimulants .form-footer,
   &--modify-roll .form-footer {
     display: none;

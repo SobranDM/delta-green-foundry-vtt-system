@@ -371,5 +371,18 @@
   "DG.SettingsMenu.handler.label": "Ustawienia Oficera Prowadzącego",
   "DG.SettingsMenu.handler.title": "Ustawienia tylko dla Oficera prowadzącego",
   "DG.Messages.Skillsmark.Marked": "Ta umiejętność jest oznaczona.",
-  "DG.Messages.Skillsmark.Tooltip": "Zobacz str. 29 Podręcznika Agenta."
+  "DG.Messages.Skillsmark.Tooltip": "Zobacz str. 29 Podręcznika Agenta.",
+
+  "DG.Settings.automateAdaptationTicks.name": "Automatyczne zaznaczanie adaptacji",
+  "DG.Settings.automateAdaptationTicks.hint": "Gdy ta opcja jest włączona, adaptacje na karcie postaci automatycznie zaznaczają się i czyszczą. Po wyłączeniu musisz zarządzać adaptacją ręcznie.",
+  "DG.Messages.AdaptedToSanity": "{adaptationType}.",
+  "DG.Messages.BecameTemporaryInsane": "{name} stał(a) się tymczasowo obłąkany/obłąkana.",
+  "DG.Messages.HitBreakingPoint": "{name} osiągnął/osiągnęła punkt złamania.",
+  "DG.SanityRoll.Violence": "Przemoc",
+  "DG.SanityRoll.Helplessness": "Bezsilność",
+  "DG.SanityRoll.Unnatural": "Nienaturalne",
+  "DG.SanityRoll.DialogPrompt": "Wybierz źródło tego rzutu poczytalności:",
+  "DG.SanityRoll.DialogTitle": "Rzut Poczytalności",
+  "DG.SanityRoll.None": "Brak",
+  "DG.SanityRoll.BPShort": "PZ"
 }

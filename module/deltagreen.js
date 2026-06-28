@@ -299,9 +299,9 @@ Hooks.on("createActor", async (actor, options, userId) => {
 
     if (actor.type === "agent") {
       // throw on an unarmed strike item for convenience
-      actor.AddUnarmedAttackItemIfMissing();
+      await actor.AddUnarmedAttackItemIfMissing();
     } else if (actor.type === "vehicle") {
-      actor.AddBaseVehicleItemsIfMissing();
+      await actor.AddBaseVehicleItemsIfMissing();
     }
   } catch (ex) {
     console.log(ex);

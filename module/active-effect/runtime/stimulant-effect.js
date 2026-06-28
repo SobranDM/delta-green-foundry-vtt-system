@@ -106,13 +106,64 @@ export async function applyStimulantEffect(actor, newHours) {
 }
 
 /**
+ * @param {ActiveEffect} effect
+ * @returns {boolean}
+ */
+function isStimulantEffectDurationElapsed(effect) {
+  effect.updateDuration();
+  const duration = effect.duration;
+  if (!duration) return false;
+  if (duration.expired) return true;
+  if (
+    Number.isFinite(duration.secondsRemaining) &&
+    duration.secondsRemaining <= 0
+  ) {
+    return true;
+  }
+  return Number.isFinite(duration.remaining) && duration.remaining <= 0;
+}
+
+/**
+ * Whether a stimulant AE can be deleted without racing Foundry's registry expiry batch.
+ * When duration is elapsed, the registry removes the effect and asynchronously sets
+ * `duration.expired` via modifyBatch — deleting before that update completes errors.
+ * @param {ActiveEffect} effect
+ * @returns {boolean}
+ */
+function canDeleteExpiredStimulantNow(effect) {
+  effect.updateDuration();
+  if (effect.duration?.expired) return true;
+  if (!isStimulantEffectDurationElapsed(effect)) return false;
+  const registry = foundry.documents.ActiveEffect.registry;
+  return registry.has(effect);
+}
+
+/**
  * @param {Actor} actor
  * @returns {ActiveEffect[]}
  */
 function getExpiredStimulantEffects(actor) {
-  return getStimulantEffects(actor).filter(
-    (effect) => effect.duration?.expired,
-  );
+  return getStimulantEffects(actor).filter(canDeleteExpiredStimulantNow);
+}
+
+/**
+ * Wait for Foundry to mark elapsed stimulant AEs with duration.expired.
+ * @param {Actor} actor
+ * @param {object} [options]
+ * @param {number} [options.timeoutMs=2000]
+ * @returns {Promise<void>}
+ */
+async function waitForStimulantExpiryFlags(actor, { timeoutMs = 2000 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    actor.reset();
+    const stimulants = getStimulantEffects(actor);
+    if (!stimulants.length) return;
+    const elapsed = stimulants.filter(isStimulantEffectDurationElapsed);
+    if (!elapsed.length) return;
+    if (elapsed.every((effect) => effect.duration?.expired)) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
 }
 
 /**
@@ -122,12 +173,34 @@ function getExpiredStimulantEffects(actor) {
  */
 export async function pruneExpiredStimulantEffects(actor) {
   if (actor.type !== "agent") return;
-  const expired = getExpiredStimulantEffects(actor);
+
+  let expired = getExpiredStimulantEffects(actor);
+  if (!expired.length) {
+    const pending = getStimulantEffects(actor).filter(
+      (effect) =>
+        isStimulantEffectDurationElapsed(effect) &&
+        !canDeleteExpiredStimulantNow(effect),
+    );
+    if (pending.length) {
+      await waitForStimulantExpiryFlags(actor);
+      actor.reset();
+      expired = getExpiredStimulantEffects(actor);
+    }
+  }
+
   if (!expired.length) return;
-  await actor.deleteEmbeddedDocuments(
-    "ActiveEffect",
-    expired.map((effect) => effect.id),
-  );
+
+  const ids = expired
+    .map((effect) => effect.id)
+    .filter((id) => actor.effects.has(id));
+  if (!ids.length) return;
+
+  try {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+  } catch (err) {
+    const message = String(err?.message ?? err);
+    if (!message.includes("does not exist")) throw err;
+  }
 }
 
 /**
