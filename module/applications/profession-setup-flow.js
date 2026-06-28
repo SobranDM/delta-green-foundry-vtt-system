@@ -34,14 +34,16 @@ async function runStatsPhase(actor, { token = null } = {}) {
     const result = await showRollStatsDialog(actor, { token });
     if (result === null) return false;
     if (result.outcome === "back") return runStatsPhase(actor, { token });
-    return true;
+    if (result.outcome === "submitted") return true;
+    return false;
   }
 
   if (choice === "assign") {
     const result = await showAssignStatsDialog(actor);
     if (result === null) return false;
     if (result.outcome === "back") return runStatsPhase(actor, { token });
-    return true;
+    if (result.outcome === "submitted") return true;
+    return false;
   }
 
   return false;

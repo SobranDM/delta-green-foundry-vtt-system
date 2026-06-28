@@ -1,5 +1,5 @@
 <div class="dg-dialog dg-dialog--assign-stats">
-    <p class="assign-stats-remaining" data-points-remaining>
+    <p class="assign-stats-remaining dg-dialog__intro" data-points-remaining>
         {{localize "DG.ProfessionSetup.AssignStats.PointsRemaining" remaining=remaining}}
     </p>
     <div class="assign-stats-rows">
@@ -16,4 +16,9 @@
         </label>
         {{/each}}
     </div>
+    <div class="dg-dialog__messages assign-stats-messages"
+         data-assign-stats-messages
+         role="alert"
+         aria-live="polite"
+         hidden></div>
 </div>

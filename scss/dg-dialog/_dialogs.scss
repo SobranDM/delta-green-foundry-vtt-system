@@ -2,10 +2,15 @@
 .dg-dialog--assign-stats .assign-stats-remaining {
   margin: 0 0 0.75rem;
   font-weight: bold;
+  color: var(--dg-ink);
 }
 
 .dg-dialog--assign-stats .assign-stats-remaining.is-invalid {
-  color: var(--color-text-warning, #ff9200);
+  color: var(--dg-warning-ink);
+}
+
+.dg-dialog--assign-stats .assign-stats-messages {
+  margin-top: 0.75rem;
 }
 
 .dg-dialog--assign-stats .assign-stats-rows {

@@ -39,7 +39,7 @@
 
   .dg-dialog__message--warning,
   .dg-dialog .cap-warning {
-    color: var(--color-text-warning, #c60);
+    color: var(--dg-warning-ink);
     font-weight: bold;
     margin: 0.25rem 0;
   }

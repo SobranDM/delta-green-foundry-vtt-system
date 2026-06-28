@@ -1,11 +1,13 @@
 import { BASE_TEMPLATE_PATH } from "../config/index.js";
 import {
-  STAT_KEYS,
   STAT_MAX,
   STAT_MIN,
   applyAgentStatistics,
+  buildPointBuyValidationMessages,
   buildStatisticRows,
+  computePointsRemaining,
   getDefaultPointBuyValues,
+  getPointBuyInvalidKeys,
   validatePointBuyValues,
 } from "../profession/stat-setup.js";
 import { getDialogContentRoot, showDgDialog } from "./dg-dialog.js";
@@ -16,29 +18,32 @@ const { renderTemplate } = foundry.applications.handlebars;
 
 /**
  * @param {DialogV2} dialog
- * @param {Record<string, number>} values
+ * @returns {Record<string, number>}
  */
-function syncValuesFromDom(dialog, values) {
+function readPointBuyInputsFromDom(dialog) {
+  /** @type {Record<string, number>} */
+  const values = {};
   const root = getDialogContentRoot(dialog);
-  if (!root) return;
+  if (!root) return values;
 
-  for (const key of STAT_KEYS) {
-    const input = root.querySelector(`[data-stat-key="${key}"]`);
-    if (input) {
-      let value = Number(input.value);
-      if (!Number.isFinite(value)) value = STAT_MIN;
-      values[key] = Math.clamp(Math.trunc(value), STAT_MIN, STAT_MAX);
+  for (const input of root.querySelectorAll("[data-stat-key]")) {
+    const key = input.dataset.statKey;
+    if (key) {
+      const raw = input.value.trim();
+      values[key] = raw === "" ? Number.NaN : Number(raw);
     }
   }
+  return values;
 }
 
 /**
  * @param {DialogV2} dialog
- * @param {Record<string, number>} values
+ * @param {object} [options]
+ * @param {boolean} [options.showErrors=false]
  */
-function refreshAssignStatsUi(dialog, values) {
-  syncValuesFromDom(dialog, values);
-  const { isValid, remaining } = validatePointBuyValues(values);
+function refreshAssignStatsUi(dialog, { showErrors = false } = {}) {
+  const values = readPointBuyInputsFromDom(dialog);
+  const remaining = computePointsRemaining(values);
 
   const root = getDialogContentRoot(dialog);
   const remainingEl = root?.querySelector("[data-points-remaining]");
@@ -50,35 +55,48 @@ function refreshAssignStatsUi(dialog, values) {
     remainingEl.classList.toggle("is-invalid", remaining !== 0);
   }
 
-  const submitBtn = dialog.element?.querySelector(
-    'button[data-action="submit"]',
-  );
-  if (submitBtn) submitBtn.disabled = !isValid;
+  const messagesEl = root?.querySelector("[data-assign-stats-messages]");
+  const statInputs = root?.querySelectorAll("[data-stat-key]") ?? [];
+
+  if (showErrors) {
+    const invalidKeys = new Set(getPointBuyInvalidKeys(values));
+    for (const input of statInputs) {
+      const key = input.dataset.statKey;
+      if (key) input.setAttribute("aria-invalid", String(invalidKeys.has(key)));
+    }
+  } else {
+    for (const input of statInputs) {
+      input.removeAttribute("aria-invalid");
+    }
+  }
+
+  if (messagesEl) {
+    if (showErrors) {
+      const messages = buildPointBuyValidationMessages(values);
+      messagesEl.innerHTML = messages
+        .map(
+          (message) =>
+            `<p class="dg-dialog__message--error">${foundry.utils.escapeHTML(message)}</p>`,
+        )
+        .join("");
+      messagesEl.hidden = messages.length === 0;
+    } else {
+      messagesEl.innerHTML = "";
+      messagesEl.hidden = true;
+    }
+  }
 }
 
 /**
  * @param {DialogV2} dialog
- * @param {Record<string, number>} values
  */
-function bindAssignStatsListeners(dialog, values) {
+function bindAssignStatsListeners(dialog) {
   const root = getDialogContentRoot(dialog);
   if (!root) return;
 
   root.querySelectorAll("[data-stat-key]").forEach((input) => {
-    input.addEventListener("input", () => {
-      const key = input.dataset.statKey;
-      if (!key) return;
-
-      let value = Number(input.value);
-      if (!Number.isFinite(value)) value = STAT_MIN;
-      value = Math.clamp(Math.trunc(value), STAT_MIN, STAT_MAX);
-      input.value = String(value);
-      values[key] = value;
-      refreshAssignStatsUi(dialog, values);
-    });
-    input.addEventListener("change", () =>
-      refreshAssignStatsUi(dialog, values),
-    );
+    input.addEventListener("input", () => refreshAssignStatsUi(dialog));
+    input.addEventListener("change", () => refreshAssignStatsUi(dialog));
   });
 }
 
@@ -89,7 +107,7 @@ function bindAssignStatsListeners(dialog, values) {
 export default async function showAssignStatsDialog(actor) {
   /** @type {Record<string, number>} */
   const values = getDefaultPointBuyValues();
-  const { remaining } = validatePointBuyValues(values);
+  const remaining = computePointsRemaining(values);
   /** @type {{ outcome: 'submitted' } | { outcome: 'back' } | null} */
   let result = null;
 
@@ -113,8 +131,8 @@ export default async function showAssignStatsDialog(actor) {
     position: { width: 420 },
     form: { closeOnSubmit: false },
     onRender: (dialog) => {
-      bindAssignStatsListeners(dialog, values);
-      refreshAssignStatsUi(dialog, values);
+      bindAssignStatsListeners(dialog);
+      refreshAssignStatsUi(dialog);
     },
     close: () => result,
     buttons: [
@@ -130,13 +148,15 @@ export default async function showAssignStatsDialog(actor) {
         action: "submit",
         label: game.i18n.localize("DG.ProfessionSetup.AssignStats.Submit"),
         default: true,
-        disabled: true,
         callback: async (_event, _button, dialog) => {
-          syncValuesFromDom(dialog, values);
-          const { isValid } = validatePointBuyValues(values);
-          if (!isValid) return false;
+          const submittedValues = readPointBuyInputsFromDom(dialog);
+          const { isValid } = validatePointBuyValues(submittedValues);
+          if (!isValid) {
+            refreshAssignStatsUi(dialog, { showErrors: true });
+            return false;
+          }
 
-          await applyAgentStatistics(actor, { ...values });
+          await applyAgentStatistics(actor, { ...submittedValues });
           result = { outcome: "submitted" };
           await dialog.close();
           return false;

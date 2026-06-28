@@ -461,6 +461,8 @@
   "DG.ProfessionSetup.RollStats.ChatLabel": "Stat Rolls (4d6, drop lowest)",
   "DG.ProfessionSetup.AssignStats.Title": "Assign Stats",
   "DG.ProfessionSetup.AssignStats.PointsRemaining": "Points remaining: {remaining}",
+  "DG.ProfessionSetup.AssignStats.ErrorInvalidStat": "{stat} must be a whole number between {min} and {max}.",
+  "DG.ProfessionSetup.AssignStats.ErrorPointsRemaining": "You must spend exactly 72 points ({remaining} remaining).",
   "DG.ProfessionSetup.AssignStats.Submit": "Submit",
   "DG.ItemWindow.Profession.Description": "Description",
   "DG.ItemWindow.Profession.SkillsTab": "Skills",
