@@ -204,22 +204,10 @@
   margin-bottom: 4px;
   opacity: 0.95;
 }
-.sanity-roll-dialog .form-footer button {
-  flex-basis: 45%;
-  flex-grow: 1;
-}
+
 .card-bp {
   text-align: right;
   display: block;
   float: right;
   font-weight: inherit;
-}
-.sanity-roll-dialog .form-footer > button {
-  flex: 0 0 48%;
-}
-
-.sanity-roll-dialog .form-footer {
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
 }

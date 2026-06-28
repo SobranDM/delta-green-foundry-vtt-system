@@ -12,6 +12,7 @@ import {
 } from "../../active-effect/runtime/derived.js";
 import { formatProfessionSkillLabel } from "../../profession/index.js";
 import { buildRollTargetDisplayHtml } from "../../utils/roll-target-tooltip.js";
+import { isBlindRollMessageMode } from "../../utils/message-mode.js";
 import { DGRoll } from "./dg-roll.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
@@ -353,7 +354,11 @@ export class DGPercentileRoll extends DGRoll {
   createChatHeader() {
     if (this.type === "sanity") {
       let rollLabel = `${this.localizedKey}: <b>${this.effectiveTarget}</b>`;
-      if (game.settings.get(DG.ID, "automateAdaptationTicks")) {
+      const showBpDistance =
+        this.actor?.type === "agent" &&
+        game.settings.get(DG.ID, "automateAdaptationTicks") &&
+        !isBlindRollMessageMode(this.options.messageMode);
+      if (showBpDistance) {
         const { value, currentBreakingPoint } =
           this.actor?.system?.sanity ?? {};
         let sanPointsTillBP =

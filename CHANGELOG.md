@@ -1,5 +1,28 @@
 # Release/Patch Notes
 
+## Version 2.0.0 - xxxx-xx-xx
+
+### **Features:**
+
+- [#123](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/123) - Added Active Effect support
+- [#346](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/346) - Maximum resources modifiable through AE
+- [#365](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/365) - Added buttons to trigger exhaustion, rest, and use stimulants
+- [#209](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/209) - Added **Profession** item type with partial chargen automation
+- Professions compendium pack (source entries for standard Agent's Handbook professions)
+- Sanity roll automation (`automateAdaptationTicks`, default on): violence/helplessness/unnatural choice dialog on agent SAN rolls, adaptation incident ticking, temporary insanity and breaking point chat notifications, BP distance on roll cards (hidden on blind rolls)
+- [#296](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/296) - Remove adaptation checks if not adapted
+
+### **Bug Fixes:**
+
+- [#392](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/392) - Fixed sheet rolls
+- [#396](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/396) - Fixed typed skill dialog when editing existing skill
+
+### **Under the Hood:**
+
+- [#323](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/323) - Refactored roll logic and split into util functions
+- [#233](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/233) - Refactored CSS to Sass
+- Sanity automation reactions moved from global actor hooks into `AgentData` lifecycle and `data/derived/sanity-automation.js`
+
 ## Version 1.7.0 - 2026-06-20
 
 > Thanks to [hknmtt](https://github.com/hknmtt) for updating the Brazilian translation.
@@ -8,30 +31,18 @@
 ### **Features:**
 
 - Update the system for basic Foundry v14 compatibility.
-- [#296](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/296) - Remove adaptation checks if not adapted.
-- [#281](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/281) - Add tooltips to checkboxes in adaptation area.
-- [#211](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/211) - Move macros to System macros folder in compendium.
+- [#393](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/393) - Updated to support Foundry v14
+- [#223](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/223) - Migrated item sheets to Foundry ApplicationV2 (`ItemSheetV2`)
 - [#283](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/283) - Added new actor sheet with left hand Sidebar RFC
 - [#291](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/291) - Moving Luck button from three dots to left hand panel
 - [#297](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/297) - Move adaption ticks to left hand panel
 - [#374](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/374) - Moving Age to Bio tab
-- [#393](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/393) - Updated to support Foundry v14
-- [#223](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/223) - Migrated item sheets to Foundry ApplicationV2 (`ItemSheetV2`)
-- [#123](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/123) - Added Active Effect support
-- [#346](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/346) - Maximum resources modifiable through AE
-- [#365](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/365) - Added buttons to trigger exhaustion, rest, and use stimulants
-- [#209](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/209) - Added **Profession** item type with partial chargen automation
+- [#281](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/281) - Add tooltips to checkboxes in adaptation area
+- [#211](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/211) - Move macros to System macros folder in compendium
 
 ### **Bug Fixes:**
 
-- [#392](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/392) - Fixed sheet rolls
 - [#394](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/394) - Unified actor and item description fields on schema with shared ProseMirror preparation
-- [#396](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/396) - Fixed typed skill dialog when editing existing skill
-
-### **Under the Hood:**
-
-- [#323](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/323) - Refactored roll logic and split into util functions
-- [#233](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/233) - Refactored CSS to Sass
 
 ## Version 1.6.6 - 2026-04-15
 

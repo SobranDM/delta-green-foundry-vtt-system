@@ -110,6 +110,7 @@ export async function processDGRoll(event, roll) {
   const automateSanity =
     roll instanceof DGPercentileRoll &&
     roll.type === "sanity" &&
+    roll.actor?.type === "agent" &&
     game.settings.get(DG.ID, "automateAdaptationTicks");
 
   if (automateSanity && !roll.sanityChoice?.value) {

@@ -31,6 +31,7 @@ Root-level modules: [`settings.js`](settings.js), [`templates.js`](templates.js)
 - **Chat cards:** rolls via [`createDGRollChatMessage`](chat/dg-chat-card.js); non-roll cards via [`createDGChatMessage`](chat/dg-chat-card.js).
 - **Active effect runtime:** import exhaustion/stimulant sync from [`active-effect/runtime/`](active-effect/runtime/).
 - **Derived actor math:** import from [`data/derived/actor-derived.js`](data/derived/actor-derived.js).
+- **Sanity automation:** adaptation tick/clear and chat notifications live in [`data/derived/sanity-automation.js`](data/derived/sanity-automation.js); reactions run from [`AgentData`](data/actor/agent.js) `_preUpdate` / `_onUpdate`. Roll correlation uses the `lastSanityRollSource` actor flag set in [`roll/roll.js`](roll/roll.js) during sanity percentile rolls (agents only when `automateAdaptationTicks` is enabled).
 - **Agent skill defaults:** single source in [`data/actor/base/agent-skill-defaults.js`](data/actor/base/agent-skill-defaults.js) (used by human actor schema and profession code).
 
 ## Profession setup flow
