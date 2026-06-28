@@ -62,6 +62,11 @@ export default class AgentData extends CharacterData {
         exhausted: new BooleanField({ initial: false }),
         exhaustedPenalty: new NumberField({ initial: -20 }),
         suppressExhaustion: new BooleanField({ initial: false }),
+        stimulantDosesSinceRest: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+        }),
       }),
       biography: new SchemaField({
         profession: new StringField({ initial: "" }),

@@ -35,6 +35,7 @@ export function buildWillpowerChangeSpan({ amount, current, max }) {
  * @param {string} [params.rollLabelKey] i18n key for a formatted roll-label row (HTML).
  * @param {Record<string, string|number>} params.i18nData
  * @param {Roll} params.roll Roll attached to the chat message for display and Dice So Nice.
+ * @param {Roll[]} [params.additionalRolls] Extra rolls embedded in the card and message rolls array.
  * @param {string|null} [params.extraContentKey] Optional i18n key appended on a new line after the main body.
  * @returns {Promise<ChatMessage>}
  */
@@ -46,6 +47,7 @@ export default async function createAgentResourceChatMessage({
   rollLabelKey = null,
   i18nData,
   roll,
+  additionalRolls = [],
   extraContentKey = null,
 }) {
   let content = contentKey ? game.i18n.format(contentKey, i18nData) : "";
@@ -57,8 +59,8 @@ export default async function createAgentResourceChatMessage({
   const rollLabel = rollLabelKey
     ? game.i18n.format(rollLabelKey, i18nData)
     : labelKey
-    ? game.i18n.localize(labelKey)
-    : "";
+      ? game.i18n.localize(labelKey)
+      : "";
 
   const messageMode = getDefaultRollMessageMode();
 
@@ -66,6 +68,7 @@ export default async function createAgentResourceChatMessage({
     actor,
     token,
     roll,
+    additionalRolls,
     rollLabel,
     content,
     messageMode,
