@@ -6,7 +6,7 @@
 
 - [#123](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/123) - Added Active Effect support
 - [#346](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/346) - Maximum resources modifiable through AE
-- [#365](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/365) - Added buttons to trigger exhaustion, rest, and use stimulants
+- [#365](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/365) - Added buttons to trigger exhaustion, rest, and use stimulants; repeat stimulant doses without resting cost 1D6 WP
 - [#209](https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues/209) - Added **Profession** item type with partial chargen automation
 - Professions compendium pack (source entries for standard Agent's Handbook professions)
 - Sanity roll automation (`automateAdaptationTicks`, default on): violence/helplessness/unnatural choice dialog on agent SAN rolls, adaptation incident ticking, temporary insanity and breaking point chat notifications, BP distance on roll cards (hidden on blind rolls)

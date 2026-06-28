@@ -196,6 +196,8 @@
   "DG.Physical.Chat.WillpowerTooltip": "<b>Willpower:</b> {current}/{max}",
   "DG.Physical.Chat.StimulantsRegularRollLabel": "<b>Regular Stimulants.</b><br>Exhaustion suppressed for <b>{hours}</b> hours.<br>Cannot sleep during this time.",
   "DG.Physical.Chat.StimulantsHardRollLabel": "<b>Hard Drugs.</b><br>Exhaustion suppressed for <b>{hours}</b> hours.<br><b>Cannot sleep</b> during this time.",
+  "DG.Physical.Chat.StimulantsRegularRepeatRollLabel": "<b>Regular Stimulants.</b><br>Exhaustion suppressed for <b>{hours}</b> hours.<br>Cannot sleep during this time.<br>Lost {willpowerChange} (additional dose).",
+  "DG.Physical.Chat.StimulantsHardRepeatRollLabel": "<b>Hard Drugs.</b><br>Exhaustion suppressed for <b>{hours}</b> hours.<br><b>Cannot sleep</b> during this time.<br>Lost {willpowerChange} (additional dose).",
   "DG.Generic.AddButtonLabel": "Add",
   "DG.ActiveEffects.SheetLabel": "Delta Green Active Effect",
   "DG.ActiveEffects.DefaultName": "Active Effect",

@@ -358,6 +358,7 @@ export async function wrapDGChatMessageData(
  * @param {string} [params.content]
  * @param {string} [params.messageMode]
  * @param {object} [params.flags]
+ * @param {Roll[]} [params.additionalRolls]
  * @returns {Promise<{ messageData: object, mappedMode: string }>}
  */
 export async function prepareDGRollChatMessageData({
@@ -372,16 +373,20 @@ export async function prepareDGRollChatMessageData({
   content,
   messageMode,
   flags = {},
+  additionalRolls = [],
 }) {
   const mappedMode = normalizeRollMessageMode(messageMode);
   const resolvedActor = actor ?? roll.actor ?? null;
   const resolvedToken = token ?? roll.options?.token ?? null;
   const useCard = shouldUseChatCard({ title, subtitle, label, rollLabel });
+  const rolls = [roll, ...additionalRolls];
 
-  if (!roll._evaluated) {
-    await roll.evaluate({
-      allowInteractive: !isBlindRollMessageMode(mappedMode),
-    });
+  for (const r of rolls) {
+    if (!r._evaluated) {
+      await r.evaluate({
+        allowInteractive: !isBlindRollMessageMode(mappedMode),
+      });
+    }
   }
 
   const speaker = getDGSpeaker({
@@ -395,7 +400,7 @@ export async function prepareDGRollChatMessageData({
   // Foundry only auto-injects roll HTML when content has no child elements.
   // DG chat cards always wrap content in a <section>, so embed rolls in the body.
   if (useCard && !contentIncludesRollDisplay(bodyContent)) {
-    bodyContent = `${bodyContent}${await renderRollsHTML([roll])}`;
+    bodyContent = `${bodyContent}${await renderRollsHTML(rolls)}`;
   }
 
   let messageData = {
@@ -403,7 +408,7 @@ export async function prepareDGRollChatMessageData({
     speaker,
     content: bodyContent,
     sound: CONFIG.sounds.dice,
-    rolls: [roll],
+    rolls,
     flags: foundry.utils.mergeObject({ [DG.ID]: { chatCard: useCard } }, flags),
   };
 

@@ -10,14 +10,14 @@
 
     {{#if canManageEffects}}
         <div class="effect-add">
-            <a class="item-control action-pill"
+            <button type="button" class="item-control action-pill"
                data-action="createEffect"
                data-document-class="ActiveEffect"
                data-render-sheet="true"
                title="{{localize 'DG.ActiveEffects.Add'}}">
                 <i class="fas fa-plus"></i>
                 {{localize "DG.ActiveEffects.Add"}}
-            </a>
+            </button>
         </div>
     {{/if}}
 

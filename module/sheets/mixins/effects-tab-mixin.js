@@ -73,12 +73,18 @@ export default function EffectsTabMixin(Base) {
       return { temporary, permanent };
     }
 
+    /** @returns {boolean} */
+    _canManageEffects() {
+      if (!this.isEditable) return false;
+      return this.document.testUserPermission(game.user, "OWNER");
+    }
+
     /** @override */
     async _prepareContext(options) {
       const context = await super._prepareContext(options);
       if (this._shouldPrepareSheetEffects()) {
         context.sheetEffects = await this._prepareSheetEffects();
-        context.canManageEffects = this.isEditable;
+        context.canManageEffects = this._canManageEffects();
       }
       return context;
     }
@@ -93,11 +99,16 @@ export default function EffectsTabMixin(Base) {
     }
 
     /**
-     * @param {PointerEvent} _event
-     * @param {HTMLElement} target
+     * @param {PointerEvent} event
+     * @param {HTMLElement} _target
      */
-    static async createEffect() {
+    static async createEffect(event) {
+      event?.preventDefault();
+      event?.stopPropagation();
+
       const sheet = /** @type {EffectsTabHost} */ (this);
+      if (!sheet._canManageEffects()) return;
+
       const parent = sheet._effectsParent;
       const documentClass = foundry.utils.getDocumentClass("ActiveEffect");
 
