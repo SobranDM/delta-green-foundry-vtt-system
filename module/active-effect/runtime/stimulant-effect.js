@@ -166,7 +166,7 @@ export async function applyStimulantDoseSinceRest(actor, hours, options = {}) {
  */
 function isStimulantEffectDurationElapsed(effect) {
   effect.updateDuration();
-  const duration = effect.duration;
+  const { duration } = effect;
   if (!duration) return false;
   if (duration.expired) return true;
   if (
@@ -189,7 +189,7 @@ function canDeleteExpiredStimulantNow(effect) {
   effect.updateDuration();
   if (effect.duration?.expired) return true;
   if (!isStimulantEffectDurationElapsed(effect)) return false;
-  const registry = foundry.documents.ActiveEffect.registry;
+  const { registry } = foundry.documents.ActiveEffect;
   return registry.has(effect);
 }
 
@@ -217,7 +217,11 @@ async function waitForStimulantExpiryFlags(actor, { timeoutMs = 2000 } = {}) {
     const elapsed = stimulants.filter(isStimulantEffectDurationElapsed);
     if (!elapsed.length) return;
     if (elapsed.every((effect) => effect.duration?.expired)) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // Poll until Foundry's registry marks elapsed effects with duration.expired.
+    // eslint-disable-next-line no-await-in-loop -- intentional polling delay
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10);
+    });
   }
 }
 
@@ -280,7 +284,9 @@ export async function pruneAllAgentsExpiredStimulants() {
   if (!game.user.isActiveGM) return;
   for (const actor of game.actors) {
     if (actor.type === "agent") {
+      // eslint-disable-next-line no-await-in-loop -- avoid concurrent actor mutations
       await pruneExpiredStimulantEffects(actor);
+      // eslint-disable-next-line no-await-in-loop -- avoid concurrent actor mutations
       await syncExhaustionEffect(actor);
     }
   }

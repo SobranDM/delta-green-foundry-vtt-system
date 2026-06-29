@@ -1,0 +1,14 @@
+<div class="inventory-item-name inventory-item-rollable flexrow">
+    <div class="item-image inventory-item-icon"
+         data-action="rollItemIcon"
+         style="background-image: url('{{item.img}}')"
+         title="{{displayName}}"></div>
+    <button type="button"
+            class="inventory-item-caret"
+            data-action="toggleItemSummary"
+            aria-expanded="false">
+        <i class="fas fa-caret-right"></i>
+    </button>
+    <span class="item-name inventory-item-label"
+          data-action="toggleItemSummary">{{displayName}}</span>
+</div>

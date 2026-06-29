@@ -127,6 +127,10 @@ export default class AgentData extends CharacterData {
         aboveBreakingPoint:
           this.sanity.value > this.sanity.currentBreakingPoint,
       };
+      options.dg.lastSanityRollSource = this.parent.getFlag(
+        DG.ID,
+        "lastSanityRollSource",
+      );
     }
 
     if (hasAdaptationChange(changes)) {

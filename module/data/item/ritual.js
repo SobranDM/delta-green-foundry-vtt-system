@@ -25,6 +25,7 @@ export default class RitualItemData extends foundry.abstract.TypeDataModel {
       complexity: new StringField({ initial: "Simple" }),
       handlerNotes: DGHTMLField(),
       revealed: new BooleanField({ initial: false }),
+      learned: new BooleanField({ initial: false }),
     };
   }
 }

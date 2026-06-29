@@ -3,7 +3,7 @@
     {{#if sanityChoiceLabel}}
     <div class="dice-sanity-choice">{{sanityChoiceLabel}}</div>
     {{/if}}
-    <div style="{{styleOverride}}" class="dice-formula">{{resultString}}</div>
+    <div class="dice-formula {{resultClass}}">{{resultString}}</div>
     <div class="dice-tooltip">
       <div class="wrapper">
         <section class="tooltip-part">
@@ -29,6 +29,28 @@
       <button type="button" data-action="rollback-skill-failure-state">
         <i class="fa fa-undo" aria-hidden="true"></i>
       </button>
+    </div>
+  {{/if}}
+
+  {{#if weaponFollowUp}}
+    <div class="inventory-weapon-followup rollback-section">
+      {{#if weaponFollowUp.showDamage}}
+        <button type="button"
+                data-action="inventory-roll-damage"
+                data-item-id="{{weaponFollowUp.itemId}}"
+                data-actor-id="{{weaponFollowUp.actorId}}"
+                data-is-critical="{{weaponFollowUp.isCritical}}">
+          {{localize 'DG.DamageOrLethalityRoll.RollDamage'}}
+        </button>
+      {{/if}}
+      {{#if weaponFollowUp.showLethality}}
+        <button type="button"
+                data-action="inventory-roll-lethality"
+                data-item-id="{{weaponFollowUp.itemId}}"
+                data-actor-id="{{weaponFollowUp.actorId}}">
+          {{localize 'DG.DamageOrLethalityRoll.RollLethality'}}
+        </button>
+      {{/if}}
     </div>
   {{/if}}
 

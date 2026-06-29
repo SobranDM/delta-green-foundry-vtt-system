@@ -1,6 +1,7 @@
 import DGSheetMixin from "./base-sheet.js";
 import composeMixins from "./mixins/compose-mixins.js";
 import ItemListMixin from "./mixins/item-list-mixin.js";
+import InventoryUxMixin from "./mixins/inventory-ux-mixin.js";
 import RollSheetMixin from "./mixins/roll-sheet-mixin.js";
 import SkillPrepMixin from "./mixins/skill-prep-mixin.js";
 import SpecialTrainingMixin from "./mixins/special-training-mixin.js";
@@ -15,6 +16,7 @@ const ComposedActorSheetBase = composeMixins(
   TypedSkillMixin,
   ItemListMixin,
   SkillPrepMixin,
+  InventoryUxMixin,
   RollSheetMixin,
   DGSheetMixin,
 )(ActorSheetV2);
@@ -33,6 +35,8 @@ export default class DGActorSheet extends ComposedActorSheetBase {
       toggle: this._toggleGeneric,
       toggleItemSortMode: this._toggleItemSortMode,
       browsePack: this._browsePack,
+      rollItemIcon: this._onRollItemIcon,
+      toggleItemSummary: this._onToggleItemSummary,
     },
   });
 
@@ -42,6 +46,8 @@ export default class DGActorSheet extends ComposedActorSheetBase {
   /** Gear tab section partials shared by NPC/unnatural/vehicle gear tabs and agent combat tab. */
   static get GEAR_SECTION_PARTIALS() {
     return [
+      `${this.TEMPLATE_PATH}/partials/inventory-caret-spacer-partial.html`,
+      `${this.TEMPLATE_PATH}/partials/inventory-item-name-partial.html`,
       `${this.TEMPLATE_PATH}/partials/weapons-section-partial.html`,
       `${this.TEMPLATE_PATH}/partials/armor-section-partial.html`,
       `${this.TEMPLATE_PATH}/partials/other-gear-section-partial.html`,

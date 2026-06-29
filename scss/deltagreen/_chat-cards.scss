@@ -1,3 +1,5 @@
+@use "../mixins" as *;
+
 /* Delta Green stylized chat cards */
 
 .chat-message.dg-chat-card-message > .message-header {
@@ -93,10 +95,14 @@
 }
 
 .dg-chat-card__roll-label {
-  padding: 4px 10px;
-  font-size: 0.8rem;
+  padding: 4px;
+  font-size: 0.875rem;
   line-height: 1.3;
   border-bottom: 1px solid var(--dg-ink);
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .dg-chat-card__roll-label .dg-chat-card__target-info,
@@ -134,6 +140,50 @@
   border-radius: 0;
   padding: 5px;
   background: inherit;
+}
+
+.dg-chat-card__body .dice-formula.dg-roll-result--critical-success {
+  color: var(--dg-roll-success);
+}
+
+.dg-chat-card__body .dice-formula.dg-roll-result--critical-failure {
+  color: var(--dg-roll-failure);
+}
+
+/* Foundry GM secret blocks use a light surface even in dark mode */
+.dg-chat-card__body :is(.secret, secret-block section),
+.dg-chat-card__body .inventory-chat-handler-notes {
+  @include dg-light-surface-ink;
+  @include dg-parchment-content-theme;
+
+  .inventory-chat-gm-header,
+  .inventory-chat-gm-only-header {
+    color: var(--dg-ink);
+    text-shadow: none;
+  }
+}
+
+.dg-chat-card__body
+  .inventory-chat-handler-notes
+  h4.inventory-chat-handler-notes-header {
+  margin: 0 0 0.35em;
+  font-weight: bold;
+}
+
+.inventory-chat-handler-notes {
+  margin-top: 0;
+}
+
+.inventory-chat-handler-notes-body {
+  margin-top: 0;
+}
+
+.inventory-chat-handler-notes-divider {
+  margin: 0.75em 0 0.5em;
+}
+
+.inventory-ritual-learn-divider {
+  margin-top: 0.5em;
 }
 
 .dg-chat-card__body .dice-roll {
@@ -210,4 +260,115 @@
   display: block;
   float: right;
   font-weight: inherit;
+}
+
+.inventory-chat-header {
+  margin-bottom: 0.5em;
+}
+
+.inventory-chat-header-row {
+  line-height: 1.35;
+}
+
+.inventory-chat-header-label {
+  font-weight: bold;
+  text-shadow: none;
+}
+
+.inventory-chat-description {
+  margin-top: 0.5em;
+}
+
+.inventory-chat-roll-section {
+  margin-top: 0.5em;
+
+  .inventory-chat-header-row {
+    margin-bottom: 0.25em;
+  }
+}
+
+.inventory-chat-sanity-loss-section {
+  .inventory-chat-sanity-loss-divider {
+    margin: 0.75em 0 0.5em;
+  }
+
+  .inventory-chat-sanity-loss-divider--after-roll {
+    margin-bottom: 0;
+  }
+
+  .inventory-chat-sanity-loss-header {
+    margin: 0 0 0.25em;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: none;
+  }
+}
+
+.inventory-chat-gm-header,
+.inventory-chat-gm-only-header {
+  margin: 0.75em 0 0.35em;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: bold;
+  line-height: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  text-shadow: none;
+}
+
+.inventory-ritual-divider {
+  margin: 0.75em 0 0.5em;
+  border: 0;
+  border-top: 1px solid var(--dg-ink);
+  opacity: 0.25;
+}
+
+.inventory-ritual-gm-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  margin: 0;
+
+  .inventory-chat-gm-only-header {
+    margin: 0;
+    text-align: center;
+    width: 100%;
+  }
+
+  .inventory-allow-study-btn {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.inventory-allow-study-btn {
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.inventory-ritual-study-result {
+  margin-top: 0.5em;
+}
+
+.inventory-ritual-outcome {
+  margin: 0.5em 0 0;
+  font-weight: bold;
+}
+
+.inventory-ritual-migration-list {
+  margin: 0.5em 0 0;
+  padding-left: 1.25em;
+
+  ul {
+    margin: 0.25em 0 0.5em;
+    padding-left: 1.25em;
+  }
+
+  a.content-link,
+  a.entity-link {
+    font-weight: bold;
+  }
 }

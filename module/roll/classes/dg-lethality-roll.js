@@ -34,10 +34,10 @@ export class DGLethalityRoll extends DGPercentileRoll {
    */
   async toChat() {
     let resultString = "";
-    let styleOverride = "";
+    let resultClass = "";
     if (this.total <= this.target) {
       resultString = `${game.i18n.localize("DG.Roll.Lethal").toUpperCase()}`;
-      styleOverride = "color: red";
+      resultClass = "dg-roll-result--critical-failure";
     } else {
       resultString = `${game.i18n.localize("DG.Roll.Failure")}`;
     }
@@ -48,7 +48,7 @@ export class DGLethalityRoll extends DGPercentileRoll {
     const html = await renderTemplate(
       "systems/deltagreen/templates/roll/lethality-roll.hbs",
       {
-        styleOverride,
+        resultClass,
         resultString,
         total: this.total,
         die1: nonLethalDamage.die1,

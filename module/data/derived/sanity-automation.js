@@ -1,5 +1,8 @@
 import DG from "../../config/index.js";
-import { createDGChatMessage } from "../../chat/dg-chat-card.js";
+import {
+  createDGChatMessage,
+  getDGRollToken,
+} from "../../chat/dg-chat-card.js";
 import { getDefaultRollMessageMode } from "../../utils/message-mode.js";
 
 const ADAPTATION_SOURCES = ["violence", "helplessness"];
@@ -36,17 +39,41 @@ export function hasAdaptationChange(changes) {
  * @param {Actor} actor
  * @param {string} messageKey
  * @param {object} [formatData]
- * @returns {Promise<ChatMessage|void>}
+ * @returns {string}
  */
-async function notifySanityChat(actor, messageKey, formatData = {}) {
-  const content = game.i18n.format(messageKey, {
+function formatSanityChatLine(actor, messageKey, formatData = {}) {
+  return game.i18n.format(messageKey, {
     name: actor.name,
     ...formatData,
   });
-  return createDGChatMessage({
+}
+
+/**
+ * @param {Actor} actor
+ * @param {string|string[]} messageKeys
+ * @param {object} [formatData]
+ * @returns {Promise<ChatMessage|void>}
+ */
+async function notifySanityChat(actor, messageKeys, formatData = {}) {
+  const keys = Array.isArray(messageKeys) ? messageKeys : [messageKeys];
+  const lines = keys
+    .map((key) => formatSanityChatLine(actor, key, formatData))
+    .filter(Boolean);
+  if (!lines.length) return;
+
+  const rollLabel = lines.length > 1 ? lines.join("<br>") : lines[0];
+  await createDGChatMessage({
     actor,
-    content,
+    token: getDGRollToken(actor, actor.sheet?.token),
+    rollLabel,
+    content: "",
     messageMode: getDefaultRollMessageMode(),
+    flags: {
+      [DG.ID]: {
+        sanityMentalNotice: true,
+        sanityNoticeKeys: keys,
+      },
+    },
   });
 }
 
@@ -157,27 +184,39 @@ export async function reactToSanityLoss(actor, changed, options) {
     aboveBreakingPoint &&
     typeof currentBreakingPoint === "number" &&
     valueNow <= currentBreakingPoint;
+  const becameTemporarilyInsane = drop >= 5;
+  const chatMessageKeys = [];
 
   // Nested incident-only updates do not change SAN value, so _preUpdate does not
   // snapshot again and this path does not re-run on tick/clear passes.
-  if (drop >= 5) {
-    if (!hitBreakingPoint) {
-      const lastSource = actor.getFlag(DG.ID, "lastSanityRollSource");
-      if (lastSource === "violence" || lastSource === "helplessness") {
-        await clearAdaptationCheckboxesForSourcesIfNotAdapted(actor, [
-          lastSource,
-        ]);
-      }
+  if (becameTemporarilyInsane) {
+    chatMessageKeys.push("DG.Messages.BecameTemporaryInsane");
+  }
+  if (hitBreakingPoint) {
+    chatMessageKeys.push("DG.Messages.HitBreakingPoint");
+  }
+
+  if (becameTemporarilyInsane && !hitBreakingPoint) {
+    const lastSource =
+      options.dg?.lastSanityRollSource ??
+      actor.getFlag(DG.ID, "lastSanityRollSource");
+    if (lastSource === "violence" || lastSource === "helplessness") {
+      await clearAdaptationCheckboxesForSourcesIfNotAdapted(actor, [
+        lastSource,
+      ]);
     }
-    await notifySanityChat(actor, "DG.Messages.BecameTemporaryInsane");
   }
   if (hitBreakingPoint) {
     await clearAdaptationCheckboxesForSourcesIfNotAdapted(
       actor,
       ADAPTATION_SOURCES,
     );
-    await notifySanityChat(actor, "DG.Messages.HitBreakingPoint");
   }
+
+  if (chatMessageKeys.length) {
+    await notifySanityChat(actor, chatMessageKeys);
+  }
+
   if (drop > 0 && drop < 5 && !hitBreakingPoint) {
     await tickAdaptationForLastSanitySourceIfNotAdapted(actor);
   }
