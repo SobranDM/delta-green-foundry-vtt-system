@@ -58,7 +58,7 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Build CSS
-        run: npm run build:css
+        run: pnpm run build:css
 
       - name: Substitute Download Link
         uses: TomaszKandula/variable-substitution@v1.0.1
