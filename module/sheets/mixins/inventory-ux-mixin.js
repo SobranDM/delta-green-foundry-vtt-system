@@ -136,7 +136,10 @@ export default function InventoryUxMixin(Base) {
       const item = this.actor.items.get(row.dataset.itemId);
       if (!item) return;
 
-      if ((event.shiftKey || event.which === 3) && item.type === "weapon") {
+      const wantsModifierRoll =
+        event.shiftKey || event.which === 3 || event.type === "contextmenu";
+
+      if (wantsModifierRoll && item.type === "weapon") {
         const roll = createDGRollFromDataset(
           {
             rolltype: "weapon",

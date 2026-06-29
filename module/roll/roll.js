@@ -101,6 +101,7 @@ export function createDGRollFromDataset(
 export async function processDGRoll(event, roll) {
   const shiftKey = event?.shiftKey ?? false;
   const which = event?.which ?? 0;
+  const isContextMenu = event?.type === "contextmenu";
 
   if (roll instanceof DGPercentileRoll && roll.blockedRollMessage) {
     ui.notifications.warn(roll.blockedRollMessage, { localize: true });
@@ -119,7 +120,7 @@ export async function processDGRoll(event, roll) {
     roll.sanityChoice = sanityChoice;
   }
 
-  if (shiftKey || which === 3) {
+  if (shiftKey || which === 3 || isContextMenu) {
     if (!(roll instanceof DGSanityDamageRoll)) {
       const dialogData = await roll.showDialog();
       if (!dialogData) return;
