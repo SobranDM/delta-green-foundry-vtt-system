@@ -6,19 +6,11 @@ import { buildInventoryDisplayName } from "../item/inventory-actions.js";
 /**
  * @param {object} params
  * @param {Item} params.item
- * @param {boolean} params.learned
- * @param {boolean} [params.canPerformOrLearn]
- * @returns {Promise<"description"|"perform"|"learn"|null>}
+ * @param {boolean} [params.canPerform]
+ * @returns {Promise<"description"|"perform"|null>}
  */
-export async function showInventoryRitualDialog({
-  item,
-  learned,
-  canPerformOrLearn = true,
-}) {
+export async function showInventoryRitualDialog({ item, canPerform = true }) {
   const displayName = buildInventoryDisplayName(item);
-  const actionLabel = learned
-    ? game.i18n.localize("DG.Inventory.PerformRitual")
-    : game.i18n.localize("DG.Inventory.LearnRitual");
 
   const buttons = [
     {
@@ -28,11 +20,11 @@ export async function showInventoryRitualDialog({
     },
   ];
 
-  if (canPerformOrLearn) {
+  if (canPerform) {
     buttons.push({
-      action: learned ? "perform" : "learn",
-      label: actionLabel,
-      callback: () => (learned ? "perform" : "learn"),
+      action: "perform",
+      label: game.i18n.localize("DG.Inventory.PerformRitual"),
+      callback: () => "perform",
     });
   }
 

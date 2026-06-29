@@ -382,23 +382,17 @@ export default class DeltaGreenItem extends Item {
    * @returns {Promise<void>}
    */
   async _handleRitualInventoryClick({ actor, token }) {
-    const { learned } = this.system;
-    const canPerformOrLearn = learned
-      ? isInventoryAutomationEnabled("ritualActivation")
-      : true;
+    const canPerform = isInventoryAutomationEnabled("ritualActivation");
 
     const choice = await showInventoryRitualDialog({
       item: this,
-      learned,
-      canPerformOrLearn,
+      canPerform,
     });
 
     if (choice === "description") {
       await this.showInventoryCard({ actor, token });
     } else if (choice === "perform") {
       await this.performRitual({ actor, token });
-    } else if (choice === "learn") {
-      await this.learnRitual({ actor, token });
     }
   }
 

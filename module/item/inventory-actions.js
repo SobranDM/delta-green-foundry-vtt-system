@@ -302,6 +302,9 @@ export function resolveInventoryIconAction(item, { shiftKey = false } = {}) {
       if (shiftKey) {
         return item.system.learned ? "ritual-perform" : "ritual-learn";
       }
+      if (!item.system.learned) {
+        return "ritual-learn";
+      }
       return "ritual-choice";
     default:
       return "chat-card";
