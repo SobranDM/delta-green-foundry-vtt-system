@@ -59,6 +59,7 @@ function readMessageMode(dialog) {
  * @param {boolean} [options.hideTarget]
  * @param {number} [options.defaultModifier]
  * @param {Actor|null} [options.actor]
+ * @param {string} [options.title]
  * @returns {Promise<{ targetModifier: number, messageMode?: string }|void>}
  */
 export async function showPercentileRollModifyDialog({
@@ -68,6 +69,7 @@ export async function showPercentileRollModifyDialog({
   hideTarget = false,
   defaultModifier = 20,
   actor = null,
+  title,
 }) {
   const quickModifiers = QUICK_MODIFIER_PRESETS.map((preset) => ({
     ...preset,
@@ -118,10 +120,12 @@ export async function showPercentileRollModifyDialog({
     form: { closeOnSubmit: false },
     position: { width: 420 },
     window: {
-      title: DGUtils.localizeWithFallback(
-        "DG.ModifySkillRollDialogue.Title",
-        "Modify Roll",
-      ),
+      title:
+        title ??
+        DGUtils.localizeWithFallback(
+          "DG.ModifySkillRollDialogue.Title",
+          "Modify Roll",
+        ),
     },
     close: () => dialogResult,
     buttons: [

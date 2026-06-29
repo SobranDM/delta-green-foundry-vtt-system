@@ -7,7 +7,7 @@ import { getDGSpeaker } from "../chat/dg-chat-card.js";
 export function isDiceSoNiceAvailable() {
   return Boolean(
     game.modules.get("dice-so-nice")?.active &&
-      typeof game.dice3d?.showForRoll === "function",
+    typeof game.dice3d?.showForRoll === "function",
   );
 }
 

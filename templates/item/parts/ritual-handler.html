@@ -2,6 +2,9 @@
      data-group="primary"
      data-tab="handler">
     <div class="tome-sheet-handler-info-horizontal-grid-2col">
+        <span class="resource-label">{{localize 'DG.ItemWindow.Ritual.Learned'}}:</span>
+        <input type="checkbox" name="system.learned" {{checked item.system.learned}} />
+
         <span class="resource-label">{{localize 'DG.ItemWindow.Tome.UnnaturalIncrease'}}:</span>
         <input class="item-sheet-short-input" name="system.unnaturalSkillIncrease" type="text" value="{{item.system.unnaturalSkillIncrease}}" data-dtype="Number"/>
 

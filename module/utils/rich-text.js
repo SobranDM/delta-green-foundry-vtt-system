@@ -1,3 +1,5 @@
+import enrichHTML from "./enrich-html.js";
+
 const { HTMLField } = foundry.data.fields;
 
 /**
@@ -20,12 +22,10 @@ export async function prepareProseMirrorInput(
   }
 
   const value = foundry.utils.getProperty(document.system, fieldPath) ?? "";
-  const enriched =
-    await foundry.applications.ux.TextEditor.implementation.enrichHTML(value, {
-      async: true,
-      rollData: document.getRollData?.() ?? {},
-      relativeTo: document,
-    });
+  const enriched = await enrichHTML(value, {
+    async: true,
+    relativeTo: document,
+  });
 
   const input = field.toInput({
     name: `system.${fieldPath}`,

@@ -1,4 +1,10 @@
 import { getDisorderLabel } from "../profession/disorders.js";
+import {
+  buildInventoryDisplayName,
+  hasWeaponDamage,
+  hasWeaponDamageAndLethality,
+  hasWeaponLethality,
+} from "../item/inventory-actions.js";
 import DGUtils from "./utility-functions.js";
 import {
   getAvailableRollMessageModes,
@@ -121,23 +127,16 @@ export default function registerHandlebarsHelpers() {
     return result;
   });
 
-  Handlebars.registerHelper("hasWeaponDamage", (damage) => {
-    const trimmed = String(damage ?? "").trim();
-    return trimmed !== "" && trimmed !== "0";
-  });
+  Handlebars.registerHelper("hasWeaponDamage", hasWeaponDamage);
 
-  Handlebars.registerHelper("hasWeaponLethality", (lethality) => {
-    const value = Number(lethality);
-    return Number.isFinite(value) && value > 0;
-  });
+  Handlebars.registerHelper("hasWeaponLethality", hasWeaponLethality);
 
-  Handlebars.registerHelper("hasWeaponDamageAndLethality", (item) => {
-    const damage = item?.system?.damage;
-    const lethality = item?.system?.lethality;
-    const trimmed = String(damage ?? "").trim();
-    const hasDamage = trimmed !== "" && trimmed !== "0";
-    const hasLethality =
-      Number.isFinite(Number(lethality)) && Number(lethality) > 0;
-    return hasDamage && hasLethality;
+  Handlebars.registerHelper(
+    "hasWeaponDamageAndLethality",
+    hasWeaponDamageAndLethality,
+  );
+
+  Handlebars.registerHelper("inventoryDisplayName", (item) => {
+    return buildInventoryDisplayName(item);
   });
 }

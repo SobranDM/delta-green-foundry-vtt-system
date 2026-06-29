@@ -344,7 +344,7 @@ Hooks.on("renderChatLog", async (app, element) => {
 Hooks.on("renderChatMessageHTML", async (message, element, context) => {
   if (message.getFlag(DG.ID, "chatCard")) {
     element.classList.add("dg-chat-card-message");
-    enrichDGChatCardMessage(message, element);
+    await enrichDGChatCardMessage(message, element);
   }
 
   // ignore non chat card notifications

@@ -3,14 +3,30 @@
 import DG from "../config/index.js";
 import { getCharacterSheetThemeClass } from "../applications/dg-dialog.js";
 import {
+  buildHandlerNotesChatHtml,
+  buildInventoryDisplayName,
+} from "../item/inventory-actions.js";
+import {
   applyRollMessageModeToMessage,
-  buildChatMessageModeOptions,
   isBlindRollMessageMode,
   normalizeRollMessageMode,
 } from "../utils/message-mode.js";
 
 const CHAT_CARD_TEMPLATE = "systems/deltagreen/templates/chat/dg-chat-card.hbs";
 const { renderTemplate } = foundry.applications.handlebars;
+
+/** Message ids that need a follow-up scroll after async card enrichment. */
+const scrollNudgeMessageIds = new Set();
+
+/**
+ * Schedule a chat scroll nudge after {@link enrichDGChatCardMessage} finishes.
+ * Foundry scrolls before `renderChatMessageHTML` hooks complete, so cards that
+ * grow during enrichment (handler notes, portraits) can end up partially clipped.
+ * @param {string} messageId
+ */
+export function markDGChatCardForScrollNudge(messageId) {
+  if (messageId) scrollNudgeMessageIds.add(messageId);
+}
 
 /**
  * Resolve a TokenDocument from sheet/macro context.
@@ -26,13 +42,13 @@ export function resolveDGTokenDocument(token, scene = null) {
   if (token.document?.documentName === "Token") {
     return token.document;
   }
-  const tokenId = typeof token === "string" ? token : token.id ?? token._id;
+  const tokenId = typeof token === "string" ? token : (token.id ?? token._id);
   if (!tokenId) return null;
 
   const sceneId =
     typeof scene === "string"
       ? scene
-      : scene?.id ?? token.parent?.id ?? canvas.scene?.id;
+      : (scene?.id ?? token.parent?.id ?? canvas.scene?.id);
   const sceneDoc = sceneId ? game.scenes.get(sceneId) : canvas.scene;
   return (
     sceneDoc?.tokens.get(tokenId) ??
@@ -47,16 +63,18 @@ export function resolveDGTokenDocument(token, scene = null) {
  * @param {Actor|null} [params.actor]
  * @param {TokenDocument|object|string|null} [params.token]
  * @param {Scene|SceneDocument|string|null} [params.scene]
+ * @param {string} [params.speakerAlias] Override the displayed speaker name in chat cards
  * @returns {ChatMessage.SpeakerData}
  */
 export function getDGSpeaker({
   actor = null,
   token = null,
   scene = null,
+  speakerAlias,
 } = {}) {
   const tokenDoc = resolveDGTokenDocument(token, scene);
   const sceneDoc = scene ?? tokenDoc?.parent ?? canvas.scene ?? null;
-  const alias = tokenDoc?.name ?? actor?.name;
+  const alias = speakerAlias ?? tokenDoc?.name ?? actor?.name;
 
   return ChatMessage.getSpeaker({
     actor,
@@ -173,10 +191,230 @@ function shouldUseChatCard({
 }
 
 /**
+ * Bottom-most element to align after async card enrichment.
+ * @param {HTMLElement} card
+ * @returns {HTMLElement|null}
+ */
+function getChatCardScrollAnchor(card) {
+  if (!card) return null;
+  return (
+    card.querySelector(".inventory-ritual-learn-footer") ??
+    card.querySelector(".inventory-chat-handler-notes") ??
+    card.querySelector(".dg-chat-card__body") ??
+    card
+  );
+}
+
+/**
+ * Re-scroll chat after async enrichment grows a newly posted card.
  * @param {ChatMessage} message
  * @param {HTMLElement} element
+ * @returns {Promise<void>}
  */
-export function enrichDGChatCardMessage(message, element) {
+async function nudgeChatScrollAfterCardEnrich(message, element) {
+  if (!message?.id || !scrollNudgeMessageIds.delete(message.id)) return;
+  if (!ui.chat?.rendered) return;
+
+  await new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+
+  const card = element.querySelector(".dg-chat-card");
+  const anchor = getChatCardScrollAnchor(card);
+  const log = ui.chat.element?.querySelector(".chat-scroll");
+
+  if (anchor && log) {
+    const logRect = log.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
+    const overflow = anchorRect.bottom - logRect.bottom;
+    if (overflow > 0) log.scrollTop += overflow;
+  } else {
+    await ui.chat.scrollBottom({ waitImages: true });
+  }
+
+  if (ui.chat.popout?.rendered) {
+    await ui.chat.popout.scrollBottom({ waitImages: true });
+  }
+}
+
+/**
+ * Drop an empty card body and roll-label divider left over from older templates.
+ * @param {HTMLElement} card
+ */
+function cleanupLabelOnlyChatCard(card) {
+  const body = card.querySelector(".dg-chat-card__body");
+  if (!body) return;
+
+  const hasMeaningfulContent = Boolean(
+    body.querySelector(
+      "img, .dice-roll, button, input, select, textarea, a, .inventory-chat-header, .inventory-chat-description, .inventory-ritual-learn-footer, .inventory-ritual-allow-study, .inventory-chat-handler-notes, .secret, secret-block",
+    ) || body.textContent.trim(),
+  );
+  if (hasMeaningfulContent) return;
+
+  body.remove();
+}
+
+/**
+ * Mask unrevealed ritual/tome names for the current viewer at render time.
+ * @param {ChatMessage} message
+ * @param {HTMLElement} card
+ */
+function applyInventoryChatItemRollLabel(message, card) {
+  const actorId =
+    message.getFlag(DG.ID, "inventoryActorId") ??
+    message.getFlag(DG.ID, "actorId");
+  const itemId =
+    message.getFlag(DG.ID, "inventoryItemId") ??
+    message.getFlag(DG.ID, "itemId");
+  if (!actorId || !itemId) return;
+
+  const item = game.actors.get(actorId)?.items.get(itemId);
+  if (!item || (item.type !== "ritual" && item.type !== "tome")) return;
+
+  const rollLabelEl = card.querySelector(".dg-chat-card__roll-label");
+  if (!rollLabelEl) return;
+
+  rollLabelEl.textContent = buildInventoryDisplayName(item);
+}
+
+/**
+ * @param {ChatMessage} message
+ * @returns {Item|null}
+ */
+function getRitualInventoryChatItem(message) {
+  const actorId =
+    message.getFlag(DG.ID, "inventoryActorId") ??
+    message.getFlag(DG.ID, "actorId");
+  const itemId =
+    message.getFlag(DG.ID, "inventoryItemId") ??
+    message.getFlag(DG.ID, "itemId");
+  if (!actorId || !itemId) return null;
+  return game.actors.get(actorId)?.items.get(itemId) ?? null;
+}
+
+/**
+ * @param {HTMLElement|null} body
+ */
+function clearInjectedRitualHandlerNotes(body) {
+  body
+    ?.querySelectorAll(
+      ".inventory-chat-handler-notes, .inventory-ritual-learn-divider, .inventory-chat-handler-notes-divider",
+    )
+    .forEach((el) => el.remove());
+}
+
+/**
+ * @param {HTMLElement|null} body
+ */
+function clearInjectedRitualLearnFooter(body) {
+  body?.querySelectorAll(".inventory-ritual-learn-footer").forEach((el) => {
+    el.remove();
+  });
+}
+
+/**
+ * @param {ChatMessage} message
+ * @returns {string}
+ */
+function buildRitualLearnGmFooterHtml(message) {
+  const actorId =
+    message.getFlag(DG.ID, "inventoryActorId") ??
+    message.getFlag(DG.ID, "actorId");
+  const itemId =
+    message.getFlag(DG.ID, "inventoryItemId") ??
+    message.getFlag(DG.ID, "itemId");
+  const gmLabel = game.i18n.localize("DG.Inventory.GMOnlyHeader");
+  const allowStudyLabel = game.i18n.localize("DG.Inventory.AllowStudy");
+
+  return `<div class="inventory-ritual-learn-footer"><div class="inventory-ritual-allow-study inventory-ritual-gm-actions"><span class="inventory-chat-gm-only-header">${gmLabel}</span><button type="button" class="inventory-allow-study-btn" data-action="ritual-allow-study" data-item-id="${itemId}" data-actor-id="${actorId}">${allowStudyLabel}</button></div></div>`;
+}
+
+/**
+ * @param {HTMLElement|null} body
+ * @param {ChatMessage} message
+ */
+function injectRitualLearnGmFooter(body, message) {
+  if (!body) return null;
+
+  const studyPending = message.getFlag(DG.ID, "ritualStudyPending");
+  const studyResolved = message.getFlag(DG.ID, "ritualStudyResolved");
+  if (!studyPending || studyResolved) return null;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = buildRitualLearnGmFooterHtml(message);
+  const footer = wrapper.firstElementChild;
+  if (!footer) return null;
+
+  body.appendChild(footer);
+
+  footer.querySelectorAll(".inventory-allow-study-btn").forEach((btn) => {
+    btn.toggleAttribute("disabled", !game.user.isGM);
+  });
+
+  return footer.querySelector(".inventory-ritual-allow-study");
+}
+
+/**
+ * Inject GM-only handler notes for ritual learn and perform inventory cards.
+ * @param {ChatMessage} message
+ * @param {HTMLElement} card
+ * @returns {Promise<void>}
+ */
+async function enrichRitualInventoryChatCard(message, card) {
+  const isLearnRequest = message.getFlag(DG.ID, "ritualLearnRequest");
+  const isPerform = message.getFlag(DG.ID, "ritualPerform");
+  if (!isLearnRequest && !isPerform) return;
+
+  const body = card.querySelector(".dg-chat-card__body");
+  clearInjectedRitualHandlerNotes(body);
+  clearInjectedRitualLearnFooter(body);
+
+  if (isLearnRequest) {
+    const allowStudy = injectRitualLearnGmFooter(body, message);
+
+    if (!game.user.isGM) return;
+
+    const item = getRitualInventoryChatItem(message);
+    if (!item) return;
+
+    const handlerHtml = await buildHandlerNotesChatHtml(item);
+    if (!handlerHtml) return;
+
+    const handlerBlock = `<hr class="inventory-ritual-divider inventory-chat-handler-notes-divider" />${handlerHtml}`;
+
+    if (allowStudy) {
+      allowStudy.insertAdjacentHTML(
+        "beforebegin",
+        `${handlerBlock}<hr class="inventory-ritual-divider inventory-ritual-learn-divider" />`,
+      );
+      return;
+    }
+
+    body?.insertAdjacentHTML("beforeend", handlerBlock);
+    return;
+  }
+
+  if (!game.user.isGM) return;
+
+  const item = getRitualInventoryChatItem(message);
+  if (!item) return;
+
+  const handlerHtml = await buildHandlerNotesChatHtml(item);
+  if (!handlerHtml) return;
+
+  body?.insertAdjacentHTML(
+    "beforeend",
+    `<hr class="inventory-ritual-divider inventory-chat-handler-notes-divider" />${handlerHtml}`,
+  );
+}
+
+/**
+ * @param {ChatMessage} message
+ * @param {HTMLElement} element
+ * @returns {Promise<void>}
+ */
+export async function enrichDGChatCardMessage(message, element) {
   const card = element.querySelector(".dg-chat-card");
   if (!card) return;
 
@@ -197,22 +435,35 @@ export function enrichDGChatCardMessage(message, element) {
 
   const speakerEl = card.querySelector(".dg-chat-card__speaker");
   const authorEl = card.querySelector(".dg-chat-card__author");
-  const speakerName = message.alias ?? "";
+  const isRitualMigrationNotice = message.getFlag(
+    DG.ID,
+    "ritualMigrationNotice",
+  );
+  const migrationSpeaker = game.i18n.localize(
+    "DG.Inventory.RitualMigrationSpeaker",
+  );
+  const speakerName = isRitualMigrationNotice
+    ? migrationSpeaker
+    : (message.alias ?? "");
   const authorName = message.author?.name ?? "";
 
   if (speakerEl) speakerEl.textContent = speakerName;
 
   if (authorEl) {
-    const whisperEl = foundryHeader?.querySelector(".whisper-to");
-    if (whisperEl) {
-      authorEl.textContent = whisperEl.textContent.trim();
-      authorEl.hidden = false;
-      whisperEl.remove();
-    } else if (speakerName !== authorName && authorName) {
-      authorEl.textContent = authorName;
-      authorEl.hidden = false;
-    } else {
+    if (isRitualMigrationNotice) {
       authorEl.hidden = true;
+    } else {
+      const whisperEl = foundryHeader?.querySelector(".whisper-to");
+      if (whisperEl) {
+        authorEl.textContent = whisperEl.textContent.trim();
+        authorEl.hidden = false;
+        whisperEl.remove();
+      } else if (speakerName !== authorName && authorName) {
+        authorEl.textContent = authorName;
+        authorEl.hidden = false;
+      } else {
+        authorEl.hidden = true;
+      }
     }
   }
 
@@ -230,6 +481,11 @@ export function enrichDGChatCardMessage(message, element) {
   }
 
   foundryHeader?.querySelector(".flavor-text")?.remove();
+
+  cleanupLabelOnlyChatCard(card);
+  applyInventoryChatItemRollLabel(message, card);
+  await enrichRitualInventoryChatCard(message, card);
+  await nudgeChatScrollAfterCardEnrich(message, element);
 }
 
 /**
@@ -290,12 +546,13 @@ function contentIncludesRollDisplay(content) {
  * @returns {Promise<string>}
  */
 async function renderRollsHTML(rolls) {
-  let html = "";
-  for (const roll of rolls) {
-    if (!roll._evaluated) await roll.evaluate();
-    html += await roll.render();
-  }
-  return html;
+  const parts = await Promise.all(
+    rolls.map(async (roll) => {
+      if (!roll._evaluated) await roll.evaluate();
+      return roll.render();
+    }),
+  );
+  return parts.join("");
 }
 
 /**
@@ -381,13 +638,15 @@ export async function prepareDGRollChatMessageData({
   const useCard = shouldUseChatCard({ title, subtitle, label, rollLabel });
   const rolls = [roll, ...additionalRolls];
 
-  for (const r of rolls) {
-    if (!r._evaluated) {
-      await r.evaluate({
-        allowInteractive: !isBlindRollMessageMode(mappedMode),
-      });
-    }
-  }
+  await Promise.all(
+    rolls.map(async (r) => {
+      if (!r._evaluated) {
+        await r.evaluate({
+          allowInteractive: !isBlindRollMessageMode(mappedMode),
+        });
+      }
+    }),
+  );
 
   const speaker = getDGSpeaker({
     actor: resolvedActor,
@@ -455,6 +714,18 @@ export async function createDGRollChatMessage(params) {
 }
 
 /**
+ * @param {object} messageData
+ * @param {string|undefined|null} messageMode
+ * @returns {Promise<ChatMessage>}
+ */
+function createDGChatMessageDocument(messageData, messageMode) {
+  const ChatMessageDocument = foundry.utils.getDocumentClass("ChatMessage");
+  const msg = new ChatMessageDocument(messageData);
+  applyRollMessageModeToMessage(msg, normalizeRollMessageMode(messageMode));
+  return ChatMessageDocument.create(msg);
+}
+
+/**
  * @param {object} params
  * @param {Actor} params.actor
  * @param {TokenDocument|null} [params.token]
@@ -464,6 +735,7 @@ export async function createDGRollChatMessage(params) {
  * @param {string} [params.label] Backward-compat fallback treated as title
  * @param {string} params.content Card body HTML
  * @param {string} [params.messageMode]
+ * @param {string} [params.speakerAlias]
  * @param {object} [params.flags]
  * @returns {Promise<ChatMessage>}
  */
@@ -477,32 +749,46 @@ export async function createDGChatMessage({
   rollLabel = "",
   content,
   messageMode,
+  speakerAlias,
   flags = {},
 }) {
-  const header = normalizeChatCardHeader({ title, subtitle, label, rollLabel });
-  if (!header.rollLabel) {
-    return ChatMessage.create({
-      speaker: getDGSpeaker({ actor, token, scene }),
-      content,
-      ...buildChatMessageModeOptions(messageMode),
-      flags,
-    });
+  let cardContent = content;
+  let header = normalizeChatCardHeader({ title, subtitle, label, rollLabel });
+
+  if (!header.rollLabel && cardContent?.trim() && actor) {
+    header = { rollLabel: cardContent.trim() };
+    cardContent = "";
   }
 
-  const speaker = getDGSpeaker({ actor, token, scene });
+  if (!header.rollLabel) {
+    return createDGChatMessageDocument(
+      {
+        speaker: getDGSpeaker({ actor, token, scene, speakerAlias }),
+        content: cardContent,
+        flags,
+      },
+      messageMode,
+    );
+  }
+
+  const speaker = getDGSpeaker({ actor, token, scene, speakerAlias });
   const portraitSrc = getDGChatPortraitSrc({ actor, token, speaker });
-  const identity = getDGChatCardIdentity(speaker);
+  const identity = speakerAlias
+    ? { speakerName: speakerAlias, authorName: "", showAuthor: false }
+    : getDGChatCardIdentity(speaker);
   const wrappedContent = await renderDGChatCard({
     portraitSrc,
     ...header,
     ...identity,
-    content,
+    content: cardContent,
   });
 
-  return ChatMessage.create({
-    speaker,
-    content: wrappedContent,
-    ...buildChatMessageModeOptions(messageMode),
-    flags: foundry.utils.mergeObject({ [DG.ID]: { chatCard: true } }, flags),
-  });
+  return createDGChatMessageDocument(
+    {
+      speaker,
+      content: wrappedContent,
+      flags: foundry.utils.mergeObject({ [DG.ID]: { chatCard: true } }, flags),
+    },
+    messageMode,
+  );
 }

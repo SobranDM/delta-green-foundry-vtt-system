@@ -11,8 +11,17 @@ import {
   getRollTargetDisplayClassFromModifier,
 } from "../../active-effect/runtime/derived.js";
 import { formatProfessionSkillLabel } from "../../profession/index.js";
+import { getPercentileRollResultPresentation } from "../percentile-result-presentation.js";
 import { buildRollTargetDisplayHtml } from "../../utils/roll-target-tooltip.js";
 import { isBlindRollMessageMode } from "../../utils/message-mode.js";
+import {
+  applyPrivateSanRollMessageMode,
+  shouldBlindPrivateSanRoll,
+} from "../../utils/private-san-roll.js";
+import {
+  hasWeaponDamage,
+  hasWeaponLethality,
+} from "../../item/weapon-roll-fields.js";
 import { DGRoll } from "./dg-roll.js";
 
 const { renderTemplate } = foundry.applications.handlebars;
@@ -58,6 +67,7 @@ export class DGPercentileRoll extends DGRoll {
    * @param {DeltaGreenActor} [options.actor]    The actor that this roll originates from.
    * @param {DeltaGreenItem}  [options.item]     Optional - The item from which the roll originates.
    * @param {DeltaGreenItem}  [options.specialTrainingName] Optional - Special training rolls have names that are different from the roll key.
+   * @param {boolean}       [options.ignoreRollTargetModifiers] When true, Active Effect roll-target modifiers are not applied (ritual study SAN rolls).
    */
   // eslint-disable-next-line default-param-last, no-unused-vars
   constructor(formula = "1D100", data = {}, options) {
@@ -101,22 +111,15 @@ export class DGPercentileRoll extends DGRoll {
   /**
    * Shows a dialog that can modify the roll.
    *
+   * @param {object} [options]
+   * @param {string} [options.title] Override modify dialog window title
    * @returns {Promise<Object|void>} - the results of the dialog.
    */
-  async showDialog() {
-    const privateSanSetting = game.settings.get(
-      "deltagreen",
-      "keepSanityPrivate",
-    );
-
-    let hideSanTarget = false;
-    if (
-      privateSanSetting &&
-      (this.type === "sanity" || this.key === "ritual") &&
-      !game.user.isGM
-    ) {
-      hideSanTarget = true;
-    }
+  async showDialog({ title } = {}) {
+    const hideSanTarget = shouldBlindPrivateSanRoll({
+      rollType: this.type,
+      key: this.key,
+    });
 
     let customModifierTarget = 20;
 
@@ -141,6 +144,7 @@ export class DGPercentileRoll extends DGRoll {
       hideTarget: hideSanTarget,
       defaultModifier: customModifierTarget,
       actor: this.actor,
+      title,
     });
   }
 
@@ -153,39 +157,14 @@ export class DGPercentileRoll extends DGRoll {
    * @returns {Promise<ChatMessage>} - the created chat message.
    */
   async toChat() {
-    // if using private san rolls, must hide any SAN roll unless user is a GM
-    const privateSanSetting = game.settings.get(
-      "deltagreen",
-      "keepSanityPrivate",
-    );
-    if (
-      privateSanSetting &&
-      (this.type === "sanity" || this.key === "ritual") &&
-      !game.user.isGM
-    ) {
-      this.options.messageMode = "blind";
-    }
+    applyPrivateSanRollMessageMode(this);
 
     const { rollLabel } = this.createChatHeader();
 
-    let resultString = "";
-    let styleOverride = "";
-
-    if (this.isSuccess) {
-      if (this.isCritical) {
-        resultString = `${game.i18n.localize("DG.Roll.CriticalSuccess")}`;
-        resultString = `${resultString.toUpperCase()}`;
-        styleOverride = "color: green";
-      } else {
-        resultString = `${game.i18n.localize("DG.Roll.Success")}`;
-      }
-    } else if (this.isCritical) {
-      resultString = `${game.i18n.localize("DG.Roll.CriticalFailure")}`;
-      resultString = `${resultString.toUpperCase()}`;
-      styleOverride = "color: red";
-    } else {
-      resultString = `${game.i18n.localize("DG.Roll.Failure")}`;
-    }
+    const { resultString, resultClass } = getPercentileRollResultPresentation(
+      this.isSuccess,
+      this.isCritical,
+    );
 
     const failureMark =
       this.actor?.type === "agent" &&
@@ -197,15 +176,30 @@ export class DGPercentileRoll extends DGRoll {
 
     const sanityChoiceLabel = getSanityChoiceLabel(this);
 
+    let weaponFollowUp = null;
+    if (this.type === "weapon" && this.item?.id && this.actor?.id) {
+      weaponFollowUp = {
+        showDamage: hasWeaponDamage(this.item.system?.damage),
+        showLethality: hasWeaponLethality(this.item.system?.lethality),
+        itemId: this.item.id,
+        actorId: this.actor.id,
+        isCritical: Boolean(this.isCritical),
+      };
+      if (!weaponFollowUp.showDamage && !weaponFollowUp.showLethality) {
+        weaponFollowUp = null;
+      }
+    }
+
     const html = await renderTemplate(
       "systems/deltagreen/templates/roll/percentile-roll.hbs",
       {
-        styleOverride,
+        resultClass,
         resultString,
         formula: this.formula,
         total: this.total,
         failureMark,
         sanityChoiceLabel,
+        weaponFollowUp,
       },
     );
 
@@ -414,6 +408,7 @@ export class DGPercentileRoll extends DGRoll {
    * @returns {number}
    */
   get rollTargetModifier() {
+    if (this.options?.ignoreRollTargetModifiers) return 0;
     if (this.type === "luck") return 0;
 
     try {

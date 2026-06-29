@@ -2,6 +2,11 @@
 :root {
   --dg-ink: #212121;
   --dg-warning-ink: #92400e;
+  --dg-success-ink: #215112;
+  --dg-failure-ink: rgb(117, 0, 0);
+  /* Brighter roll highlights for dark chat surfaces; overridden on parchment/light UI */
+  --dg-roll-success: #00a82d;
+  --dg-roll-failure: #e00000;
   --dg-surface-dark: #1a1a1a;
   --dg-surface-dark-hover: #2a2a2a;
   --dg-on-dark: #f5f5f0;

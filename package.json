@@ -29,6 +29,7 @@
     "@foundryvtt/foundryvtt-cli": "^1.1.0"
   },
   "devDependencies": {
+    "prettier": "3.8.5",
     "sass": "^1.89.0"
   }
 }
