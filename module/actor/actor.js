@@ -51,6 +51,8 @@ export default class DeltaGreenActor extends Actor {
 
   async AddUnarmedAttackItemIfMissing() {
     try {
+      if (!game.actors.has(this.id)) return;
+
       let alreadyAdded = false;
 
       for (const item of this.items) {
@@ -76,9 +78,11 @@ export default class DeltaGreenActor extends Actor {
         const _temp = await handToHandPack.getDocument(idx._id);
 
         if (_temp.name === "Unarmed Attack") {
-          toAdd.push(_temp);
+          toAdd.push(_temp.toObject());
         }
       }
+
+      if (!game.actors.has(this.id)) return;
 
       const newItems = await this.createEmbeddedDocuments("Item", toAdd);
 
@@ -104,22 +108,16 @@ export default class DeltaGreenActor extends Actor {
         console.log(flag);
       } else {
         // mark the actor so that we don't accidently do this again later, or if we want to fix/change something on it in the future
-        this.setFlag("deltagreen", "DefaultVehicleArmorAdded", true);
+        await this.setFlag("deltagreen", "DefaultVehicleArmorAdded", true);
 
-        const toAdd = []; // createEmbeddedDocument expects an array
-
-        const armor = await Item.create({
-          type: "armor",
-          name: "Vehicle Frame",
-        });
-
-        // this is the current default, but set it anyways in case it gets changed later.
-        armor.system.protection = 3;
-
-        toAdd.push(armor);
-
-        // create the item on the actor
-        const newItems = await this.createEmbeddedDocuments("Item", toAdd);
+        const newItems = await this.createEmbeddedDocuments("Item", [
+          {
+            name: "Vehicle Frame",
+            type: "armor",
+            system: { protection: 3 },
+            flags: { deltagreen: { AutoAdded: true } },
+          },
+        ]);
 
         for (const item of newItems) {
           await item.setFlag("deltagreen", "AutoAdded", true);

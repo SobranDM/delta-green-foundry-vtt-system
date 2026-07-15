@@ -1,3 +1,4 @@
+import DG from "../../config/index.js";
 import HumanSkillsActorData from "./base/human-skills.js";
 import CharacterData from "./base/character.js";
 import DGHTMLField from "../fields/html-content-field.js";
@@ -9,6 +10,12 @@ import {
   prepareStatisticsX5,
   removeLegacyRitualSkill,
 } from "../derived/actor-derived.js";
+import {
+  hasAdaptationChange,
+  hasSanityValueChange,
+  reactToAdaptationChange,
+  reactToSanityLoss,
+} from "../derived/sanity-automation.js";
 
 const { SchemaField, NumberField, StringField, BooleanField } =
   foundry.data.fields;
@@ -55,6 +62,11 @@ export default class AgentData extends CharacterData {
         exhausted: new BooleanField({ initial: false }),
         exhaustedPenalty: new NumberField({ initial: -20 }),
         suppressExhaustion: new BooleanField({ initial: false }),
+        stimulantDosesSinceRest: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+        }),
       }),
       biography: new SchemaField({
         profession: new StringField({ initial: "" }),
@@ -99,6 +111,48 @@ export default class AgentData extends CharacterData {
     if (this.physical.exhaustedPenalty > 0) {
       this.physical.exhaustedPenalty =
         -1 * Math.abs(this.physical.exhaustedPenalty);
+    }
+  }
+
+  /** @inheritdoc */
+  async _preUpdate(changes, options, user) {
+    await super._preUpdate(changes, options, user);
+    if (!game.settings.get(DG.ID, "automateAdaptationTicks")) return;
+
+    options.dg ??= {};
+
+    if (hasSanityValueChange(changes)) {
+      options.dg.previousSanity = {
+        value: this.sanity.value,
+        aboveBreakingPoint:
+          this.sanity.value > this.sanity.currentBreakingPoint,
+      };
+      options.dg.lastSanityRollSource = this.parent.getFlag(
+        DG.ID,
+        "lastSanityRollSource",
+      );
+    }
+
+    if (hasAdaptationChange(changes)) {
+      options.dg.previousAdaptations = {
+        violence: this.sanity.adaptations.violence?.isAdapted ?? false,
+        helplessness: this.sanity.adaptations.helplessness?.isAdapted ?? false,
+      };
+    }
+  }
+
+  /** @inheritdoc */
+  async _onUpdate(changed, options, userId) {
+    super._onUpdate(changed, options, userId);
+    if (!game.settings.get(DG.ID, "automateAdaptationTicks")) return;
+    if (userId !== game.user.id) return;
+
+    const actor = this.parent;
+    if (options.dg?.previousAdaptations) {
+      await reactToAdaptationChange(actor, changed, options);
+    }
+    if (options.dg?.previousSanity) {
+      await reactToSanityLoss(actor, changed, options);
     }
   }
 }

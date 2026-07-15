@@ -74,6 +74,20 @@ export function bindDialogTabs(root) {
 }
 
 /**
+ * @param {object} hooks
+ * @param {(event: Event, dialog: DialogV2) => void | Promise<void>} [hooks.userRender]
+ * @param {(dialog: DialogV2, event: Event) => void | Promise<void>} [hooks.onRender]
+ * @returns {(event: Event, dialog: DialogV2) => Promise<void>}
+ */
+function buildDgDialogRenderHook({ userRender, onRender }) {
+  return async (event, dialog) => {
+    applyDialogTheme(dialog);
+    if (userRender) await userRender(event, dialog);
+    if (onRender) await onRender(dialog, event);
+  };
+}
+
+/**
  * @param {object} options — DialogV2.wait options plus DG extensions
  * @param {string} [options.modifier] — app class modifier: dg-dialog-app--{modifier}
  * @param {(dialog: DialogV2, event: Event) => void | Promise<void>} [options.onRender]
@@ -86,18 +100,57 @@ export function showDgDialog(options) {
     onRender,
     classes: extraClasses = [],
     render: userRender,
+    close,
+    rejectClose = false,
+    renderOptions = {},
     ...dialogOptions
   } = options;
 
   const classes = [...buildDialogAppClasses(modifier), ...extraClasses];
+  const renderHook = buildDgDialogRenderHook({ userRender, onRender });
+  const closeOnSubmit =
+    dialogOptions.form?.closeOnSubmit ??
+    DialogV2.DEFAULT_OPTIONS.form.closeOnSubmit;
 
-  return DialogV2.wait({
-    ...dialogOptions,
-    classes,
-    render: async (event, dialog) => {
-      applyDialogTheme(dialog);
-      if (userRender) await userRender(event, dialog);
-      if (onRender) await onRender(dialog, event);
-    },
+  if (closeOnSubmit !== false) {
+    return DialogV2.wait({
+      ...dialogOptions,
+      classes,
+      close,
+      rejectClose,
+      renderOptions,
+      render: renderHook,
+    });
+  }
+
+  // DialogV2.wait resolves on every submit. When closeOnSubmit is false the dialog
+  // may stay open (e.g. failed validation) — resolve only when it actually closes.
+  return new Promise((resolve, reject) => {
+    const dialog = new DialogV2({
+      ...dialogOptions,
+      classes,
+      form: {
+        ...DialogV2.DEFAULT_OPTIONS.form,
+        ...dialogOptions.form,
+        closeOnSubmit: false,
+      },
+    });
+
+    dialog.addEventListener(
+      "close",
+      (event) => {
+        const result =
+          typeof close === "function" ? close(event, dialog) : undefined;
+        if (rejectClose) {
+          reject(new Error("Dialog was dismissed without pressing a button."));
+        } else {
+          resolve(result ?? null);
+        }
+      },
+      { once: true },
+    );
+
+    dialog.addEventListener("render", (event) => renderHook(event, dialog));
+    dialog.render({ ...renderOptions, force: true });
   });
 }

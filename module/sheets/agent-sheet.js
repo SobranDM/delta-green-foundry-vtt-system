@@ -14,7 +14,7 @@ import DGActorSheet from "./base-actor-sheet.js";
 import ActorEditStatForm from "../applications/edit-stats.js";
 import EffectsTabMixin from "./mixins/effects-tab-mixin.js";
 import {
-  applyStimulantEffect,
+  applyStimulantDoseSinceRest,
   clearStimulantEffects,
   getEffectiveSuppressExhaustion,
   hasActiveStimulantEffect,
@@ -33,7 +33,7 @@ export default class DGAgentSheet extends AgentSheetBase {
   /** @override */
   static DEFAULT_OPTIONS = /** @type {const} */ ({
     classes: ["agent-sheet"],
-    position: { width: 978, height: 720 },
+    position: { width: 1000, height: 734 },
     actions: {
       // Resets.
       clearBondDamage: DGAgentSheet._clearBondDamage,
@@ -456,6 +456,7 @@ export default class DGAgentSheet extends AgentSheetBase {
     await actor.update({
       "system.physical.exhausted": false,
       "system.physical.suppressExhaustion": false,
+      "system.physical.stimulantDosesSinceRest": 0,
       "system.wp.value": newWp,
     });
 
@@ -527,21 +528,38 @@ export default class DGAgentSheet extends AgentSheetBase {
     const formula = choice === "hard" ? "2d6" : "1d6";
     const hoursRoll = await new Roll(formula).evaluate();
     const hours = hoursRoll.total;
-    const rollLabelKey =
-      choice === "hard"
-        ? "DG.Physical.Chat.StimulantsHardRollLabel"
-        : "DG.Physical.Chat.StimulantsRegularRollLabel";
+    const maxWp = Number(actor.system.wp.max) || 0;
 
-    const appliedHours = await applyStimulantEffect(actor, hours);
+    const { isRepeatDose, newWp, wpLoss, appliedHours, wpRoll } =
+      await applyStimulantDoseSinceRest(actor, hours);
+
+    const rollLabelKey = (() => {
+      if (choice === "hard") {
+        return isRepeatDose
+          ? "DG.Physical.Chat.StimulantsHardRepeatRollLabel"
+          : "DG.Physical.Chat.StimulantsHardRollLabel";
+      }
+      return isRepeatDose
+        ? "DG.Physical.Chat.StimulantsRegularRepeatRollLabel"
+        : "DG.Physical.Chat.StimulantsRegularRollLabel";
+    })();
+
+    const i18nData = { hours: appliedHours };
+    if (isRepeatDose) {
+      i18nData.willpowerChange = buildWillpowerChangeSpan({
+        amount: wpLoss,
+        current: newWp,
+        max: maxWp,
+      });
+    }
 
     await createAgentResourceChatMessage({
       actor,
       token: this.token,
       roll: hoursRoll,
+      additionalRolls: wpRoll ? [wpRoll] : [],
       rollLabelKey,
-      i18nData: {
-        hours: appliedHours,
-      },
+      i18nData,
     });
   }
 

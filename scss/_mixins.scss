@@ -7,7 +7,7 @@
 @mixin dg-window-form-inputs {
   input[type="checkbox"]:checked::before,
   input[type="radio"]:checked::before {
-    color: var(--dg-ink);
+    color: white;
   }
 
   label.checkbox > input[type="radio"] {
@@ -46,6 +46,22 @@
   .form-group > label {
     color: inherit;
   }
+
+  dl dt {
+    color: inherit;
+    text-shadow: none;
+  }
+
+  dl dd {
+    color: inherit;
+  }
+}
+
+/* Light parchment surfaces: dark ink and roll colors readable on sheet/secret backgrounds */
+@mixin dg-light-surface-ink {
+  color: var(--dg-ink);
+  --dg-roll-success: var(--dg-success-ink);
+  --dg-roll-failure: var(--dg-failure-ink);
 }
 
 @mixin dg-parchment-form-fields {

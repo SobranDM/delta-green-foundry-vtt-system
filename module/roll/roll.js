@@ -1,9 +1,11 @@
+import DG from "../config/index.js";
 import { DGRoll } from "./classes/dg-roll.js";
 import { DGPercentileRoll } from "./classes/dg-percentile-roll.js";
 import { DGLethalityRoll } from "./classes/dg-lethality-roll.js";
 import { DGDamageRoll } from "./classes/dg-damage-roll.js";
 import { DGSanityDamageRoll } from "./classes/dg-sanity-damage-roll.js";
 import appendMeleeDamageBonus from "./melee-damage.js";
+import { showSanityChoiceDialog } from "./roll-dialogs.js";
 
 export {
   DGRoll,
@@ -99,13 +101,26 @@ export function createDGRollFromDataset(
 export async function processDGRoll(event, roll) {
   const shiftKey = event?.shiftKey ?? false;
   const which = event?.which ?? 0;
+  const isContextMenu = event?.type === "contextmenu";
 
   if (roll instanceof DGPercentileRoll && roll.blockedRollMessage) {
     ui.notifications.warn(roll.blockedRollMessage, { localize: true });
     return;
   }
 
-  if (shiftKey || which === 3) {
+  const automateSanity =
+    roll instanceof DGPercentileRoll &&
+    roll.type === "sanity" &&
+    roll.actor?.type === "agent" &&
+    game.settings.get(DG.ID, "automateAdaptationTicks");
+
+  if (automateSanity && !roll.sanityChoice?.value) {
+    const sanityChoice = await showSanityChoiceDialog();
+    if (!sanityChoice) return;
+    roll.sanityChoice = sanityChoice;
+  }
+
+  if (shiftKey || which === 3 || isContextMenu) {
     if (!(roll instanceof DGSanityDamageRoll)) {
       const dialogData = await roll.showDialog();
       if (!dialogData) return;
@@ -119,5 +134,30 @@ export async function processDGRoll(event, roll) {
     }
   }
   await roll.evaluate();
+
+  if (
+    automateSanity &&
+    roll.sanityChoice?.value &&
+    roll.actor?.system?.sanity?.adaptations
+  ) {
+    const { value } = roll.sanityChoice;
+    const { adaptations } = roll.actor.system.sanity;
+    const isViolence = value === "Violence";
+    const isHelplessness = value === "Helplessness";
+
+    if (
+      (isViolence && adaptations.violence?.isAdapted) ||
+      (isHelplessness && adaptations.helplessness?.isAdapted)
+    ) {
+      roll.treatAsSuccess = true;
+    }
+
+    let sourceKey = "none";
+    if (isViolence) sourceKey = "violence";
+    else if (isHelplessness) sourceKey = "helplessness";
+    else if (value === "Unnatural") sourceKey = "unnatural";
+    await roll.actor.setFlag(DG.ID, "lastSanityRollSource", sourceKey);
+  }
+
   await roll.toChat();
 }

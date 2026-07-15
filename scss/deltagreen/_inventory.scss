@@ -1,0 +1,262 @@
+@use "../mixins" as *;
+
+/*
+  Inventory row UX on actor sheets. Parchment window-content keeps a light background
+  even in Foundry dark mode; pin ink explicitly so caret/labels are not light-theme text.
+*/
+
+$dg-inventory-icon-size: 24px;
+$dg-inventory-caret-size: 18px;
+$dg-inventory-name-gap: 4px;
+$dg-inventory-list-gap: 10px;
+$dg-inventory-controls-col: 86px;
+
+@mixin inventory-list-grid($columns) {
+  --dg-inventory-grid-cols: #{$columns};
+
+  > .item-header,
+  > .item-entry {
+    display: grid;
+    grid-template-columns: var(--dg-inventory-grid-cols);
+    column-gap: $dg-inventory-list-gap;
+    align-items: center;
+    min-height: 30px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(33, 33, 33, 0.25);
+  }
+
+  > .item-header {
+    font-weight: bold;
+  }
+
+  > .item-entry > .item {
+    display: contents;
+  }
+
+  > .item-entry > .item-summary {
+    grid-column: 1 / -1;
+  }
+
+  .item-image,
+  .inventory-item-icon {
+    margin-right: 0;
+  }
+}
+
+.deltagreen section.window-content {
+  @include dg-light-surface-ink;
+
+  .inventory-list--weapons {
+    @include inventory-list-grid(
+      minmax(0, 1fr) minmax(8.5rem, 10.5rem) minmax(0, 3.5rem) #{$dg-inventory-controls-col}
+    );
+  }
+
+  .inventory-list--armor {
+    @include inventory-list-grid(
+      minmax(0, 1fr) minmax(0, 4rem) minmax(0, 3.5rem) #{$dg-inventory-controls-col}
+    );
+  }
+
+  .inventory-list--gear {
+    @include inventory-list-grid(
+      minmax(0, 1fr) minmax(0, 3.5rem) #{$dg-inventory-controls-col}
+    );
+  }
+
+  .inventory-list--name-controls {
+    @include inventory-list-grid(minmax(0, 1fr) #{$dg-inventory-controls-col});
+  }
+
+  .inventory-list--bonds {
+    @include inventory-list-grid(
+      #{$dg-inventory-icon-size} minmax(0, 1fr) minmax(0, 1fr) minmax(0, 4.5rem)
+        #{$dg-inventory-controls-col}
+    );
+
+    .centered-item-property,
+    > .item-header > .item-name,
+    > .item-entry > span:not(.inventory-item-label) {
+      text-align: center;
+    }
+  }
+
+  .inventory-list--armor,
+  .inventory-list--gear {
+    .centered-item-property {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .inventory-header-name,
+  .inventory-item-name {
+    display: flex;
+    align-items: center;
+    gap: $dg-inventory-name-gap;
+    min-width: 0;
+  }
+
+  .inventory-header-name {
+    .item-image {
+      flex: 0 0 $dg-inventory-icon-size;
+      width: $dg-inventory-icon-size;
+      height: $dg-inventory-icon-size;
+    }
+
+    .inventory-header-caret-spacer {
+      flex: 0 0 $dg-inventory-caret-size;
+      width: $dg-inventory-caret-size;
+    }
+
+    .inventory-header-label {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .item-entry {
+    list-style: none;
+  }
+
+  .inventory-item-icon {
+    flex: 0 0 $dg-inventory-icon-size;
+    width: $dg-inventory-icon-size;
+    height: $dg-inventory-icon-size;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  /* WWN-style roll hint: replace item art with a d10 (row hover = grey, icon hover = dark) */
+  .inventory-item-rollable:hover .inventory-item-icon {
+    background-image: url("/icons/svg/d10-grey.svg") !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+  }
+
+  .inventory-item-rollable .inventory-item-icon:hover {
+    background-image: url("/icons/dice/d10black.svg") !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  button.inventory-item-caret {
+    flex: 0 0 $dg-inventory-caret-size;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $dg-inventory-caret-size;
+    height: $dg-inventory-caret-size;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    color: var(--dg-ink);
+    cursor: pointer;
+    line-height: 1;
+
+    i {
+      color: inherit;
+      transition: transform 0.15s ease;
+    }
+  }
+
+  .inventory-item-label {
+    flex: 1 1 auto;
+    cursor: pointer;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--dg-ink);
+    text-shadow: none;
+  }
+
+  .inventory-list--weapons .weapons-col-damage,
+  .inventory-list--weapons .weapons-col-armor-piercing {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+    text-align: center;
+    line-height: 1.2;
+    box-sizing: border-box;
+  }
+
+  .inventory-list--weapons .weapons-col-damage {
+    padding: 0 2px;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .inventory-list--weapons > .item-header .weapons-col-damage {
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .inventory-list--weapons .weapons-col-armor-piercing {
+    padding: 0 2px;
+  }
+
+  .item-entry .item-summary {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0 8px;
+    color: var(--dg-ink);
+    transition:
+      max-height 0.25s ease,
+      opacity 0.2s ease,
+      padding 0.25s ease;
+  }
+
+  .item-entry.expanded .item-summary {
+    max-height: 600px;
+    opacity: 1;
+    padding: 6px 8px 8px;
+    border-top: 1px solid rgba(33, 33, 33, 0.15);
+  }
+
+  .inventory-summary-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 8px;
+    margin: 0 0 6px;
+    color: var(--dg-ink);
+
+    dt {
+      margin: 0;
+      font-weight: bold;
+      color: var(--dg-ink);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--dg-ink);
+    }
+  }
+
+  .inventory-summary-description {
+    font-size: var(--font-size-12, 0.75rem);
+    color: var(--dg-ink);
+  }
+}
+
+.inventory-weapon-followup {
+  gap: 8px;
+
+  button {
+    min-height: unset;
+  }
+}

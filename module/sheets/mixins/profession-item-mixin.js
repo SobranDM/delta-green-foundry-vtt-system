@@ -76,6 +76,9 @@ export default function ProfessionItemMixin(Base) {
         { catalog, isTyped: false },
       );
 
+      /** @type {boolean} */
+      let result = false;
+
       const confirmed = await showDgDialog({
         modifier: "add-profession-skill",
         content,
@@ -118,7 +121,7 @@ export default function ProfessionItemMixin(Base) {
           syncTypedVisibility();
           syncChooseOne();
         },
-        close: () => false,
+        close: () => result,
         buttons: [
           {
             action: "ok",
@@ -223,6 +226,7 @@ export default function ProfessionItemMixin(Base) {
                 [`system.${skillField}`]: currentSkills,
                 [`system.${metaField}`]: currentMeta,
               });
+              result = true;
               await dialog.close();
               return true;
             },
@@ -231,6 +235,7 @@ export default function ProfessionItemMixin(Base) {
             action: "cancel",
             label: game.i18n.localize("Cancel"),
             callback: async (_event, _button, dialog) => {
+              result = false;
               await dialog.close();
               return false;
             },

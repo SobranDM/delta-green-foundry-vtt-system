@@ -20,6 +20,7 @@
     "url": "https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system/issues"
   },
   "homepage": "https://github.com/deltagreen-foundryvtt/delta-green-foundry-vtt-system#readme",
+  "packageManager": "pnpm@11.9.0",
   "dependencies": {
     "eslint": "^8.50.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -29,6 +30,7 @@
     "@foundryvtt/foundryvtt-cli": "^1.1.0"
   },
   "devDependencies": {
+    "prettier": "3.8.5",
     "sass": "^1.89.0"
   }
 }

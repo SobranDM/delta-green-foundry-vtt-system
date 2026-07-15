@@ -299,9 +299,9 @@ Hooks.on("createActor", async (actor, options, userId) => {
 
     if (actor.type === "agent") {
       // throw on an unarmed strike item for convenience
-      actor.AddUnarmedAttackItemIfMissing();
+      await actor.AddUnarmedAttackItemIfMissing();
     } else if (actor.type === "vehicle") {
-      actor.AddBaseVehicleItemsIfMissing();
+      await actor.AddBaseVehicleItemsIfMissing();
     }
   } catch (ex) {
     console.log(ex);
@@ -344,7 +344,7 @@ Hooks.on("renderChatLog", async (app, element) => {
 Hooks.on("renderChatMessageHTML", async (message, element, context) => {
   if (message.getFlag(DG.ID, "chatCard")) {
     element.classList.add("dg-chat-card-message");
-    enrichDGChatCardMessage(message, element);
+    await enrichDGChatCardMessage(message, element);
   }
 
   // ignore non chat card notifications

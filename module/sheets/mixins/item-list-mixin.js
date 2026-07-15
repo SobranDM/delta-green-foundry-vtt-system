@@ -120,6 +120,7 @@ export default function ItemListMixin(Base) {
         const dragData = TextEditor.getDragEventData(event);
         if (dragData.type === "Item") {
           const item = fromUuidSync(dragData.uuid);
+          this._forgetExpandedInventoryItemSummary?.(item?.id);
           await item.delete();
         }
       }
@@ -140,6 +141,7 @@ export default function ItemListMixin(Base) {
           break;
         }
         case "delete": {
+          this._forgetExpandedInventoryItemSummary?.(itemId);
           this.actor.deleteEmbeddedDocuments("Item", [itemId]);
           break;
         }

@@ -22,7 +22,7 @@
 
         <div class="grid grid-3col stats">
             {{#each actor.system.statistics as |statistic key| }}
-            <div class="flex-group-center flex-mid-border">
+            <div class="flex-group-center">
                 <div>
                     <div class="physical-stats-outer-grid-3col agent-left-bar-stat-grid">
                         <label class="{{if_gt statistic.x5 0 'rollable' 'not-rollable'}} resource-label"

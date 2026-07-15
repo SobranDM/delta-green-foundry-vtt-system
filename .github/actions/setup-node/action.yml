@@ -1,15 +1,20 @@
 name: "Setup Node Project"
-description: "Sets up a Node.js project"
+description: "Sets up a Node.js project with pnpm"
 
 runs:
   using: "composite"
   steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 11.9.0
+
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: "22"
-        cache: npm
+        cache: pnpm
 
     - name: Install dependencies
       shell: bash
-      run: npm ci
+      run: pnpm install --frozen-lockfile

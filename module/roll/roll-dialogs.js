@@ -10,6 +10,13 @@ const DAMAGE_ROLL_DIALOG_TEMPLATE =
 const DAMAGE_OR_LETHALITY_ROLL_DIALOG_TEMPLATE =
   "systems/deltagreen/templates/dialog/damage-or-lethality-roll.html";
 
+const SANITY_ROLL_CHOICES = [
+  { value: "Violence", labelKey: "DG.SanityRoll.Violence" },
+  { value: "Helplessness", labelKey: "DG.SanityRoll.Helplessness" },
+  { value: "Unnatural", labelKey: "DG.SanityRoll.Unnatural" },
+  { value: "None", labelKey: "DG.SanityRoll.None" },
+];
+
 const QUICK_MODIFIER_PRESETS = [
   {
     action: "modMinus40",
@@ -52,6 +59,7 @@ function readMessageMode(dialog) {
  * @param {boolean} [options.hideTarget]
  * @param {number} [options.defaultModifier]
  * @param {Actor|null} [options.actor]
+ * @param {string} [options.title]
  * @returns {Promise<{ targetModifier: number, messageMode?: string }|void>}
  */
 export async function showPercentileRollModifyDialog({
@@ -61,6 +69,7 @@ export async function showPercentileRollModifyDialog({
   hideTarget = false,
   defaultModifier = 20,
   actor = null,
+  title,
 }) {
   const quickModifiers = QUICK_MODIFIER_PRESETS.map((preset) => ({
     ...preset,
@@ -111,10 +120,12 @@ export async function showPercentileRollModifyDialog({
     form: { closeOnSubmit: false },
     position: { width: 420 },
     window: {
-      title: DGUtils.localizeWithFallback(
-        "DG.ModifySkillRollDialogue.Title",
-        "Modify Roll",
-      ),
+      title:
+        title ??
+        DGUtils.localizeWithFallback(
+          "DG.ModifySkillRollDialogue.Title",
+          "Modify Roll",
+        ),
     },
     close: () => dialogResult,
     buttons: [
@@ -215,6 +226,33 @@ export async function showDamageRollModifyDialog({ itemName, formula }) {
         },
       },
     ],
+  });
+}
+
+/**
+ * @returns {Promise<{ value: string, label: string }|void>}
+ */
+export async function showSanityChoiceDialog() {
+  const content = `<p class="sanity-roll-dialog-prompt">${game.i18n.localize(
+    "DG.SanityRoll.DialogPrompt",
+  )}</p>`;
+
+  return showDgDialog({
+    modifier: "sanity-roll",
+    classes: ["sanity-roll-dialog"],
+    content,
+    window: {
+      title: game.i18n.localize("DG.SanityRoll.DialogTitle"),
+    },
+    close: () => null,
+    buttons: SANITY_ROLL_CHOICES.map(({ value, labelKey }) => ({
+      action: `sanity-choice-${value}`,
+      label: game.i18n.localize(labelKey),
+      callback: () => ({
+        value,
+        label: game.i18n.localize(labelKey),
+      }),
+    })),
   });
 }
 

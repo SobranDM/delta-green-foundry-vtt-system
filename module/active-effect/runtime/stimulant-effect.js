@@ -106,13 +106,123 @@ export async function applyStimulantEffect(actor, newHours) {
 }
 
 /**
+ * Apply stimulant dose counter, optional WP loss, and stimulant AE.
+ * @param {Actor} actor
+ * @param {number} hours
+ * @param {object} [options]
+ * @param {number} [options.wpRollTotal] Fixed WP loss on repeat dose; otherwise rolls 1d6.
+ * @returns {Promise<{ isRepeatDose: boolean, newWp: number, doses: number, wpLoss: number, appliedHours: number, wpRoll: Roll|null }>}
+ */
+export async function applyStimulantDoseSinceRest(actor, hours, options = {}) {
+  if (actor.type !== "agent") {
+    return {
+      isRepeatDose: false,
+      newWp: 0,
+      doses: 0,
+      wpLoss: 0,
+      appliedHours: 0,
+      wpRoll: null,
+    };
+  }
+
+  const doses = Number(actor.system.physical.stimulantDosesSinceRest) || 0;
+  const isRepeatDose = doses > 0 || hasActiveStimulantEffect(actor);
+  const currentWp = Number(actor.system.wp.value) || 0;
+  let wpLoss = 0;
+  let newWp = currentWp;
+  let wpRoll = null;
+
+  if (isRepeatDose) {
+    if (options.wpRollTotal !== undefined) {
+      wpLoss = options.wpRollTotal;
+    } else {
+      wpRoll = await new Roll("1d6").evaluate();
+      wpLoss = wpRoll.total;
+    }
+    newWp = Math.max(0, currentWp - wpLoss);
+  }
+
+  const appliedHours = await applyStimulantEffect(actor, hours);
+
+  const updateData = {
+    "system.physical.stimulantDosesSinceRest": doses + 1,
+  };
+  if (isRepeatDose) updateData["system.wp.value"] = newWp;
+  await actor.update(updateData);
+
+  return {
+    isRepeatDose,
+    newWp,
+    doses: doses + 1,
+    wpLoss,
+    appliedHours,
+    wpRoll,
+  };
+}
+
+/**
+ * @param {ActiveEffect} effect
+ * @returns {boolean}
+ */
+function isStimulantEffectDurationElapsed(effect) {
+  effect.updateDuration();
+  const { duration } = effect;
+  if (!duration) return false;
+  if (duration.expired) return true;
+  if (
+    Number.isFinite(duration.secondsRemaining) &&
+    duration.secondsRemaining <= 0
+  ) {
+    return true;
+  }
+  return Number.isFinite(duration.remaining) && duration.remaining <= 0;
+}
+
+/**
+ * Whether a stimulant AE can be deleted without racing Foundry's registry expiry batch.
+ * When duration is elapsed, the registry removes the effect and asynchronously sets
+ * `duration.expired` via modifyBatch — deleting before that update completes errors.
+ * @param {ActiveEffect} effect
+ * @returns {boolean}
+ */
+function canDeleteExpiredStimulantNow(effect) {
+  effect.updateDuration();
+  if (effect.duration?.expired) return true;
+  if (!isStimulantEffectDurationElapsed(effect)) return false;
+  const { registry } = foundry.documents.ActiveEffect;
+  return registry.has(effect);
+}
+
+/**
  * @param {Actor} actor
  * @returns {ActiveEffect[]}
  */
 function getExpiredStimulantEffects(actor) {
-  return getStimulantEffects(actor).filter(
-    (effect) => effect.duration?.expired,
-  );
+  return getStimulantEffects(actor).filter(canDeleteExpiredStimulantNow);
+}
+
+/**
+ * Wait for Foundry to mark elapsed stimulant AEs with duration.expired.
+ * @param {Actor} actor
+ * @param {object} [options]
+ * @param {number} [options.timeoutMs=2000]
+ * @returns {Promise<void>}
+ */
+async function waitForStimulantExpiryFlags(actor, { timeoutMs = 2000 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    actor.reset();
+    const stimulants = getStimulantEffects(actor);
+    if (!stimulants.length) return;
+    const elapsed = stimulants.filter(isStimulantEffectDurationElapsed);
+    if (!elapsed.length) return;
+    if (elapsed.every((effect) => effect.duration?.expired)) return;
+    // Poll until Foundry's registry marks elapsed effects with duration.expired.
+    // eslint-disable-next-line no-await-in-loop -- intentional polling delay
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10);
+    });
+  }
 }
 
 /**
@@ -122,12 +232,34 @@ function getExpiredStimulantEffects(actor) {
  */
 export async function pruneExpiredStimulantEffects(actor) {
   if (actor.type !== "agent") return;
-  const expired = getExpiredStimulantEffects(actor);
+
+  let expired = getExpiredStimulantEffects(actor);
+  if (!expired.length) {
+    const pending = getStimulantEffects(actor).filter(
+      (effect) =>
+        isStimulantEffectDurationElapsed(effect) &&
+        !canDeleteExpiredStimulantNow(effect),
+    );
+    if (pending.length) {
+      await waitForStimulantExpiryFlags(actor);
+      actor.reset();
+      expired = getExpiredStimulantEffects(actor);
+    }
+  }
+
   if (!expired.length) return;
-  await actor.deleteEmbeddedDocuments(
-    "ActiveEffect",
-    expired.map((effect) => effect.id),
-  );
+
+  const ids = expired
+    .map((effect) => effect.id)
+    .filter((id) => actor.effects.has(id));
+  if (!ids.length) return;
+
+  try {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+  } catch (err) {
+    const message = String(err?.message ?? err);
+    if (!message.includes("does not exist")) throw err;
+  }
 }
 
 /**
@@ -152,7 +284,9 @@ export async function pruneAllAgentsExpiredStimulants() {
   if (!game.user.isActiveGM) return;
   for (const actor of game.actors) {
     if (actor.type === "agent") {
+      // eslint-disable-next-line no-await-in-loop -- avoid concurrent actor mutations
       await pruneExpiredStimulantEffects(actor);
+      // eslint-disable-next-line no-await-in-loop -- avoid concurrent actor mutations
       await syncExhaustionEffect(actor);
     }
   }

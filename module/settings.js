@@ -217,6 +217,18 @@ class AutomationSettings extends SettingForm {
         default: false,
         type: Boolean,
       },
+      automateAdaptationTicks: {
+        default: true,
+        type: Boolean,
+      },
+      automateInventoryRitualActivation: {
+        default: true,
+        type: Boolean,
+      },
+      automateInventoryRitualLearn: {
+        default: true,
+        type: Boolean,
+      },
     };
   }
 }
@@ -258,6 +270,10 @@ class HandlerSettings extends SettingForm {
         type: String,
         choices: DG.skillImprovementFormulas,
         default: "d4",
+      },
+      showRitualStudyRollsToPlayers: {
+        type: Boolean,
+        default: false,
       },
     };
   }
@@ -343,5 +359,21 @@ export default function registerSystemSettings() {
     config: false,
     type: Number,
     default: 0,
+  });
+
+  game.settings.register(DG.ID, "lastLoadedSystemVersion", {
+    name: "Last Loaded System Version",
+    scope: "world",
+    config: false,
+    type: String,
+    default: "",
+  });
+
+  game.settings.register(DG.ID, "ritualLearnedMigrationNoticePosted", {
+    name: "Ritual Learned Migration Notice Posted",
+    scope: "world",
+    config: false,
+    type: Boolean,
+    default: false,
   });
 }

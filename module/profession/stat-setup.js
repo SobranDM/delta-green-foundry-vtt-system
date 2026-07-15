@@ -40,19 +40,94 @@ export async function applyAgentStatistics(actor, valuesByKey) {
 
 /**
  * @param {Record<string, number>} values
- * @returns {{ isValid: boolean, remaining: number }}
+ * @returns {number}
  */
-export function validatePointBuyValues(values) {
+export function computePointsRemaining(values) {
   let sum = 0;
   for (const key of STAT_KEYS) {
     const value = Number(values[key]);
-    if (!Number.isInteger(value) || value < STAT_MIN || value > STAT_MAX) {
-      return { isValid: false, remaining: POINT_BUY_TOTAL - sum };
-    }
-    sum += value;
+    if (Number.isFinite(value)) sum += Math.trunc(value);
   }
+  return POINT_BUY_TOTAL - sum;
+}
+
+/**
+ * @param {Record<string, number>} values
+ * @returns {{ isValid: boolean, remaining: number, invalidKeys: string[], allStatsValid: boolean }}
+ */
+function evaluatePointBuyValues(values) {
+  let sum = 0;
+  /** @type {number | null} */
+  let remainingAtFirstInvalid = null;
+  /** @type {string[]} */
+  const invalidKeys = [];
+
+  for (const key of STAT_KEYS) {
+    const value = Number(values[key]);
+    if (!Number.isInteger(value) || value < STAT_MIN || value > STAT_MAX) {
+      if (remainingAtFirstInvalid === null) {
+        remainingAtFirstInvalid = POINT_BUY_TOTAL - sum;
+      }
+      invalidKeys.push(key);
+    } else {
+      sum += value;
+    }
+  }
+
   const remaining = POINT_BUY_TOTAL - sum;
-  return { isValid: remaining === 0, remaining };
+  const allStatsValid = invalidKeys.length === 0;
+  return {
+    isValid: allStatsValid && remaining === 0,
+    remaining: allStatsValid
+      ? remaining
+      : remainingAtFirstInvalid ?? POINT_BUY_TOTAL,
+    invalidKeys,
+    allStatsValid,
+  };
+}
+
+/**
+ * @param {Record<string, number>} values
+ * @returns {string[]}
+ */
+export function getPointBuyInvalidKeys(values) {
+  return evaluatePointBuyValues(values).invalidKeys;
+}
+
+/**
+ * @param {Record<string, number>} values
+ * @returns {string[]}
+ */
+export function buildPointBuyValidationMessages(values) {
+  const { invalidKeys, allStatsValid, remaining } =
+    evaluatePointBuyValues(values);
+  /** @type {string[]} */
+  const messages = invalidKeys.map((key) =>
+    game.i18n.format("DG.ProfessionSetup.AssignStats.ErrorInvalidStat", {
+      stat: getStatisticLabel(key),
+      min: STAT_MIN,
+      max: STAT_MAX,
+    }),
+  );
+
+  if (allStatsValid && remaining !== 0) {
+    messages.push(
+      game.i18n.format("DG.ProfessionSetup.AssignStats.ErrorPointsRemaining", {
+        remaining,
+      }),
+    );
+  }
+
+  return messages;
+}
+
+/**
+ * @param {Record<string, number>} values
+ * @returns {{ isValid: boolean, remaining: number }}
+ */
+export function validatePointBuyValues(values) {
+  const { isValid, remaining } = evaluatePointBuyValues(values);
+  return { isValid, remaining };
 }
 
 /**

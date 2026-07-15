@@ -16,12 +16,17 @@ export default function RollSheetMixin(Base) {
       element.addEventListener("contextmenu", (event) => {
         event.preventDefault();
         const target = event.target.closest(
-          "[data-action='roll'],[data-action='rollLuck']",
+          "[data-action='roll'],[data-action='rollLuck'],[data-action='rollItemIcon']",
         );
         if (!target) return;
 
         if (target.dataset.action === "rollLuck") {
           this.constructor._onRollLuck.call(this, event, target);
+          return;
+        }
+
+        if (target.dataset.action === "rollItemIcon") {
+          this.constructor._onRollItemIcon.call(this, event, target);
           return;
         }
 

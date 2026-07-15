@@ -28,7 +28,7 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Build CSS
-        run: npm run build:css
+        run: pnpm run build:css
 
       - name: Get Version
         id: get_version

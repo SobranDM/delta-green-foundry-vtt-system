@@ -1,7 +1,6 @@
 .agent-sheet {
   --dg-agent-section-gap: 8px;
   --dg-agent-list-row-border: 1px solid rgba(33, 33, 33, 0.25);
-  --weapons-col-damage-trail: 60px;
 
   .window-content {
     display: grid;
@@ -10,6 +9,16 @@
     column-gap: 8px;
     width: 100%;
     height: 100%;
+
+    &.program-style {
+      background: url("../assets/img/CrumpledPlainPaper10.webp") !important;
+      background-size: 100% !important;
+
+      .skill-row .percentile-skill-input {
+        color: white;
+        font-weight: 100;
+      }
+    }
   }
 
   .left-bar {
@@ -218,6 +227,11 @@
     }
   }
 
+  .right-bar > .tab.effects.active {
+    overflow-y: auto;
+    min-height: 0;
+  }
+
   .tabs [data-action="tab"].active {
     z-index: 10;
     margin-bottom: -2px;
@@ -246,6 +260,10 @@
 
   .resources {
     margin-bottom: 8px;
+
+    > div {
+      border: 1px solid #999;
+    }
   }
 
   .resources .resource-inner-grid-3col {
@@ -268,6 +286,9 @@
     height: 1.75rem;
     min-width: 1.75rem;
     min-height: 1.75rem;
+    background: rgb(186, 184, 181);
+    border: 1px solid #d3d3d3;
+    cursor: not-allowed;
   }
 
   .breaking-point-inline {
@@ -330,6 +351,9 @@
 
     .ae-input-host--stat input {
       margin: 0;
+    }
+    > div {
+      border: 1px solid #999;
     }
   }
 
@@ -418,8 +442,7 @@
     }
   }
 
-  .tab.skills .skill-row,
-  .tab.skills .skill-row > .flexrow {
+  .tab.skills .skill-row {
     flex-wrap: nowrap;
     align-items: center;
     width: 100%;
@@ -435,34 +458,28 @@
     overflow-wrap: break-word;
     word-break: break-word;
     line-height: 1.2;
+    order: 2;
+    font-size: 0.85rem;
   }
 
   .tab.skills .flexrow.skill-row > .percentile-skill-input {
     flex: 0 0 40px;
-    width: 40px;
-    max-width: 40px;
+    width: 35px;
+    max-width: 35px;
+    order: 3;
+    font-size: 0.75rem;
+    line-height: 1.2rem;
   }
 
   .tab.skills .flexrow.skill-row > .checkbox-skill-input {
     flex: 0 0 20px;
     width: 20px;
     max-width: 20px;
+    order: 1;
   }
 
-  /* Typed skills: label grows, controls stay fixed width */
-  .tab.skills .typed-skill-row > .flexrow > .skill-label {
-    flex: 1 1 0;
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    line-height: 1.2;
-  }
-
-  .tab.skills .typed-skill-row > .flexrow > .custom-skill-controls-slot {
-    flex: 0 0 70px;
-    width: 70px;
-    max-width: 70px;
+  .tab.skills .typed-skill-row > .custom-skill-edit-controls {
+    flex: 0 0 auto;
   }
 
   .custom-skill-controls-slot {
@@ -791,39 +808,6 @@
     }
   }
 
-  .tab.combat .items-list .item-header,
-  .tab.combat .items-list .item:not(.item-header) {
-    display: grid;
-    grid-template-columns:
-      24px minmax(0, 1fr)
-      minmax(0, calc(4.25rem + var(--weapons-col-damage-trail)))
-      minmax(0, 3.5rem)
-      86px;
-    align-items: center;
-    column-gap: 10px;
-  }
-
-  .tab.combat .items-list .weapons-col-damage,
-  .tab.combat .items-list .weapons-col-armor-piercing {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 0;
-    text-align: center;
-    white-space: normal;
-    line-height: 1.2;
-    overflow-wrap: break-word;
-    box-sizing: border-box;
-  }
-
-  .tab.combat .items-list .weapons-col-damage {
-    padding: 0 calc(2px + var(--weapons-col-damage-trail)) 0 2px;
-  }
-
-  .tab.combat .items-list .weapons-col-armor-piercing {
-    padding: 0 2px;
-  }
-
   .tab.combat .items-list .weapons-col-damage[data-action="roll"],
   .tab.gear .items-list .weapons-col-damage[data-action="roll"] {
     cursor: pointer;
@@ -831,22 +815,6 @@
     white-space: nowrap;
     overflow-wrap: normal;
     gap: 0.15em;
-  }
-
-  .tab.combat .items-list .item:not(.item-header) > .flexrow {
-    display: contents;
-  }
-
-  .tab.combat .items-list .item:not(.item-header) .item-image {
-    margin-right: 0;
-  }
-
-  .tab.combat .items-list .item-header .item-image,
-  .tab.combat
-    .items-list
-    .item-header
-    > span:not(.centered-item-property):not(.item-controls) {
-    min-width: 0;
   }
 
   /* Psychological tab */
@@ -871,37 +839,6 @@
   /* Equipment tab */
   .tab.gear > div + div {
     margin-top: var(--dg-agent-section-gap);
-  }
-
-  .tab.gear .items-list .weapons-col-damage {
-    flex: 0 0 calc(4.25rem + var(--weapons-col-damage-trail));
-    max-width: calc(4.25rem + var(--weapons-col-damage-trail));
-  }
-
-  .tab.gear .items-list .weapons-col-armor-piercing {
-    flex: 0 0 3.5rem;
-    max-width: 3.5rem;
-  }
-
-  .tab.gear .items-list .weapons-col-damage,
-  .tab.gear .items-list .weapons-col-armor-piercing {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 0;
-    text-align: center;
-    white-space: normal;
-    line-height: 1.2;
-    overflow-wrap: break-word;
-    box-sizing: border-box;
-  }
-
-  .tab.gear .items-list .weapons-col-damage {
-    padding: 0 calc(2px + var(--weapons-col-damage-trail)) 0 2px;
-  }
-
-  .tab.gear .items-list .weapons-col-armor-piercing {
-    padding: 0 2px;
   }
 
   /* Personal tab */
