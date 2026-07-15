@@ -7,7 +7,7 @@
 @mixin dg-window-form-inputs {
   input[type="checkbox"]:checked::before,
   input[type="radio"]:checked::before {
-    color: var(--dg-ink);
+    color: white;
   }
 
   label.checkbox > input[type="radio"] {

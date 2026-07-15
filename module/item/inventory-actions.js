@@ -71,7 +71,11 @@ export function buildInventoryChatHeaderHtml(headerLines) {
     .filter((line) => line.value)
     .map(
       (line) =>
-        `<div class="inventory-chat-header-row"><span class="inventory-chat-header-label">${game.i18n.localize(line.labelKey)}</span> <span class="inventory-chat-header-value">${line.value}</span></div>`,
+        `<div class="inventory-chat-header-row"><span class="inventory-chat-header-label">${game.i18n.localize(
+          line.labelKey,
+        )}</span> <span class="inventory-chat-header-value">${
+          line.value
+        }</span></div>`,
     )
     .join("");
   return rows ? `<div class="inventory-chat-header">${rows}</div>` : "";
@@ -97,8 +101,8 @@ export async function buildInventorySummaryHeader(item) {
           value: hasWeaponDamage(system.damage)
             ? String(system.damage).toUpperCase()
             : hasWeaponLethality(system.lethality)
-              ? `${system.lethality}%`
-              : "",
+            ? `${system.lethality}%`
+            : "",
         },
         {
           labelKey: "DG.Gear.ArmorPiercing",

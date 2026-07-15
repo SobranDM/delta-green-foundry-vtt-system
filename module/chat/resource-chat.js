@@ -59,8 +59,8 @@ export default async function createAgentResourceChatMessage({
   const rollLabel = rollLabelKey
     ? game.i18n.format(rollLabelKey, i18nData)
     : labelKey
-      ? game.i18n.localize(labelKey)
-      : "";
+    ? game.i18n.localize(labelKey)
+    : "";
 
   const messageMode = getDefaultRollMessageMode();
 

@@ -24,16 +24,22 @@ export async function buildRitualMigrationNoticeContent() {
         .map((item) => `<li>${item.link}</li>`)
         .join("");
       sections.push(
-        `<li>${foundry.utils.escapeHTML(actor.name)}<ul>${ritualItems}</ul></li>`,
+        `<li>${foundry.utils.escapeHTML(
+          actor.name,
+        )}<ul>${ritualItems}</ul></li>`,
       );
     }
   }
 
   if (!sections.length) {
-    return `<p>${game.i18n.localize("DG.Inventory.RitualMigrationNoRituals")}</p>`;
+    return `<p>${game.i18n.localize(
+      "DG.Inventory.RitualMigrationNoRituals",
+    )}</p>`;
   }
 
-  const html = `<ul class="inventory-ritual-migration-list">${sections.join("")}</ul>`;
+  const html = `<ul class="inventory-ritual-migration-list">${sections.join(
+    "",
+  )}</ul>`;
   return enrichHTML(html, {
     async: true,
     documents: true,

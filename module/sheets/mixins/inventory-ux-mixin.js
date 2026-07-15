@@ -40,7 +40,9 @@ export default function InventoryUxMixin(Base) {
       const headerHtml = headerLines
         .map(
           (line) =>
-            `<dt class="resource-label">${game.i18n.localize(line.labelKey)}</dt><dd>${line.value}</dd>`,
+            `<dt class="resource-label">${game.i18n.localize(
+              line.labelKey,
+            )}</dt><dd>${line.value}</dd>`,
         )
         .join("");
       const description = await enrichHTML(item.system.description ?? "", {

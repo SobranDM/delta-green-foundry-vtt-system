@@ -33,7 +33,7 @@ export default class DGAgentSheet extends AgentSheetBase {
   /** @override */
   static DEFAULT_OPTIONS = /** @type {const} */ ({
     classes: ["agent-sheet"],
-    position: { width: 978, height: 720 },
+    position: { width: 1000, height: 734 },
     actions: {
       // Resets.
       clearBondDamage: DGAgentSheet._clearBondDamage,

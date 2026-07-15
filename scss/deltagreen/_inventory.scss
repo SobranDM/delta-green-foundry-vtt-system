@@ -48,15 +48,13 @@ $dg-inventory-controls-col: 86px;
 
   .inventory-list--weapons {
     @include inventory-list-grid(
-      minmax(0, 1fr) minmax(8.5rem, 10.5rem) minmax(0, 3.5rem)
-        #{$dg-inventory-controls-col}
+      minmax(0, 1fr) minmax(8.5rem, 10.5rem) minmax(0, 3.5rem) #{$dg-inventory-controls-col}
     );
   }
 
   .inventory-list--armor {
     @include inventory-list-grid(
-      minmax(0, 1fr) minmax(0, 4rem) minmax(0, 3.5rem)
-        #{$dg-inventory-controls-col}
+      minmax(0, 1fr) minmax(0, 4rem) minmax(0, 3.5rem) #{$dg-inventory-controls-col}
     );
   }
 

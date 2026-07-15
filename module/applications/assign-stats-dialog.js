@@ -76,7 +76,9 @@ function refreshAssignStatsUi(dialog, { showErrors = false } = {}) {
       messagesEl.innerHTML = messages
         .map(
           (message) =>
-            `<p class="dg-dialog__message--error">${foundry.utils.escapeHTML(message)}</p>`,
+            `<p class="dg-dialog__message--error">${foundry.utils.escapeHTML(
+              message,
+            )}</p>`,
         )
         .join("");
       messagesEl.hidden = messages.length === 0;

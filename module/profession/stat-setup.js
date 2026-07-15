@@ -80,7 +80,7 @@ function evaluatePointBuyValues(values) {
     isValid: allStatsValid && remaining === 0,
     remaining: allStatsValid
       ? remaining
-      : (remainingAtFirstInvalid ?? POINT_BUY_TOTAL),
+      : remainingAtFirstInvalid ?? POINT_BUY_TOTAL,
     invalidKeys,
     allStatsValid,
   };

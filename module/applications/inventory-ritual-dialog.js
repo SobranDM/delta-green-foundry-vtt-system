@@ -32,7 +32,9 @@ export async function showInventoryRitualDialog({ item, canPerform = true }) {
     window: {
       title: game.i18n.localize("DG.Inventory.RitualDialogTitle"),
     },
-    content: `<p>${game.i18n.format("DG.Inventory.RitualDialogPrompt", { name: displayName })}</p>`,
+    content: `<p>${game.i18n.format("DG.Inventory.RitualDialogPrompt", {
+      name: displayName,
+    })}</p>`,
     buttons,
     modifier: "inventory-ritual",
   });

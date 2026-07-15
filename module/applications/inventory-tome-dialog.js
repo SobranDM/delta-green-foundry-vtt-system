@@ -15,7 +15,9 @@ export async function showInventoryTomeDialog({ item }) {
     window: {
       title: game.i18n.localize("DG.Inventory.TomeDialogTitle"),
     },
-    content: `<p>${game.i18n.format("DG.Inventory.TomeDialogPrompt", { name: displayName })}</p>`,
+    content: `<p>${game.i18n.format("DG.Inventory.TomeDialogPrompt", {
+      name: displayName,
+    })}</p>`,
     buttons: [
       {
         action: "description",

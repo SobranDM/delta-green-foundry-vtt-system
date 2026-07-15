@@ -42,13 +42,13 @@ export function resolveDGTokenDocument(token, scene = null) {
   if (token.document?.documentName === "Token") {
     return token.document;
   }
-  const tokenId = typeof token === "string" ? token : (token.id ?? token._id);
+  const tokenId = typeof token === "string" ? token : token.id ?? token._id;
   if (!tokenId) return null;
 
   const sceneId =
     typeof scene === "string"
       ? scene
-      : (scene?.id ?? token.parent?.id ?? canvas.scene?.id);
+      : scene?.id ?? token.parent?.id ?? canvas.scene?.id;
   const sceneDoc = sceneId ? game.scenes.get(sceneId) : canvas.scene;
   return (
     sceneDoc?.tokens.get(tokenId) ??
@@ -444,7 +444,7 @@ export async function enrichDGChatCardMessage(message, element) {
   );
   const speakerName = isRitualMigrationNotice
     ? migrationSpeaker
-    : (message.alias ?? "");
+    : message.alias ?? "";
   const authorName = message.author?.name ?? "";
 
   if (speakerEl) speakerEl.textContent = speakerName;
